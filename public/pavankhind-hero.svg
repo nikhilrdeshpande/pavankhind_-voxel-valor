@@ -1,0 +1,49 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(600 360) rotate(90) scale(380 540)">
+      <stop stop-color="#F97316" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#0F0A07" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#94A3B8"/>
+    </linearGradient>
+    <linearGradient id="ember" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#B91C1C"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="900" fill="none"/>
+  <circle cx="600" cy="420" r="360" fill="url(#glow)"/>
+
+  <g opacity="0.35">
+    <path d="M0 700L220 560L430 650L620 540L820 640L1000 560L1200 650V900H0V700Z" fill="#1C1410"/>
+    <path d="M0 760L260 640L460 720L700 600L940 710L1200 630V900H0V760Z" fill="#140E0B"/>
+  </g>
+
+  <g transform="translate(300 360)">
+    <rect x="40" y="160" width="520" height="160" rx="12" fill="#1E1B16" stroke="#B45309" stroke-width="6"/>
+    <rect x="80" y="100" width="100" height="220" fill="#26221B" stroke="#B45309" stroke-width="6"/>
+    <rect x="420" y="100" width="100" height="220" fill="#26221B" stroke="#B45309" stroke-width="6"/>
+    <rect x="230" y="120" width="180" height="200" fill="#2B261F" stroke="#B45309" stroke-width="6"/>
+    <rect x="270" y="190" width="100" height="130" fill="#0F0A07" stroke="#F59E0B" stroke-width="4"/>
+  </g>
+
+  <g transform="translate(230 110) rotate(-12 370 340)">
+    <rect x="320" y="140" width="24" height="520" rx="10" fill="url(#steel)"/>
+    <rect x="300" y="620" width="64" height="18" rx="6" fill="#2B1F17"/>
+    <rect x="290" y="638" width="84" height="18" rx="6" fill="#B45309"/>
+    <circle cx="332" cy="130" r="18" fill="url(#ember)" stroke="#FDBA74" stroke-width="4"/>
+  </g>
+
+  <g transform="translate(600 110) rotate(12 370 340)">
+    <rect x="320" y="140" width="24" height="520" rx="10" fill="url(#steel)"/>
+    <rect x="300" y="620" width="64" height="18" rx="6" fill="#2B1F17"/>
+    <rect x="290" y="638" width="84" height="18" rx="6" fill="#B45309"/>
+    <circle cx="332" cy="130" r="18" fill="url(#ember)" stroke="#FDBA74" stroke-width="4"/>
+  </g>
+
+  <circle cx="600" cy="420" r="300" stroke="#F59E0B" stroke-width="6" opacity="0.6"/>
+  <circle cx="600" cy="420" r="260" stroke="#B45309" stroke-width="3" opacity="0.5"/>
+</svg>
