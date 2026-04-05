@@ -30,6 +30,12 @@ Hold the pass as Baji Prabhu. Survive the five-minute stand, build Valor, and cu
 - Valor fills on hits. When full, press `V` to unleash a Valor Strike.
 - Parry by tapping Right Click at the moment of impact to negate damage.
 
+## Combo Tiers
+
+- FURY: Combo x2–x5
+- ONSLAUGHT: Combo x6–x8
+- MYTHIC: Combo x9+
+
 ## Objectives
 
 - Periodic “Hold the Line” moments appear. Stay near the zone to complete and gain bonus score.

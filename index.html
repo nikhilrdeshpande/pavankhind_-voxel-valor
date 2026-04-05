@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content, viewport-fit=cover">
   <title>Pavankhind: The Last Stand</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,9 +33,58 @@
 }
 </script>
 <link rel="stylesheet" href="/index.css">
+<script>
+  // Dev: add ?mobile to URL to force mobile mode on desktop for testing
+  if (new URLSearchParams(location.search).has('mobile')) {
+    var origMM = window.matchMedia;
+    window.matchMedia = function(q) {
+      if (q === '(pointer: coarse)') return { matches: true, media: q, onchange: null, addListener: function(){}, removeListener: function(){}, addEventListener: function(){}, removeEventListener: function(){}, dispatchEvent: function(){ return true; } };
+      return origMM.call(window, q);
+    };
+    Object.defineProperty(navigator, 'maxTouchPoints', { get: function(){ return 5; }, configurable: true });
+  }
+</script>
 </head>
 <body>
+  <div class="rotate-prompt">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      <path d="M12 18h.01" />
+    </svg>
+    <div style="font-size: 1.25rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;">Rotate Your Device</div>
+    <div style="font-size: 0.85rem; color: #fdba74; max-width: 260px;">This game is best experienced in landscape mode. Please rotate your phone.</div>
+  </div>
   <div id="root"></div>
 <script type="module" src="/index.tsx"></script>
+<script>
+  // Enter fullscreen + lock landscape on first user interaction (mobile)
+  function enterFullscreenLandscape() {
+    var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ||
+      (navigator.maxTouchPoints > 0 && window.matchMedia('(pointer: coarse)').matches);
+    if (!isMobile) return;
+    var el = document.documentElement;
+    var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (rfs) {
+      rfs.call(el).then(function() {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(function() {});
+        }
+        // Trigger resize so Three.js renderer updates
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 500);
+      }).catch(function() {});
+    }
+  }
+  document.addEventListener('click', enterFullscreenLandscape, { once: true });
+  document.addEventListener('touchstart', enterFullscreenLandscape, { once: true });
+
+  // Re-trigger resize on fullscreen change so renderer adapts
+  document.addEventListener('fullscreenchange', function() {
+    setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
+  });
+  document.addEventListener('webkitfullscreenchange', function() {
+    setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
+  });
+</script>
 </body>
 </html>

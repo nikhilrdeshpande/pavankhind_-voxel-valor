@@ -4,10 +4,35 @@
   --ember-deep: #b45309;
   --night: #0a0706;
   --smoke: #16110e;
+  --sai-top: env(safe-area-inset-top, 0px);
+  --sai-right: env(safe-area-inset-right, 0px);
+  --sai-bottom: env(safe-area-inset-bottom, 0px);
+  --sai-left: env(safe-area-inset-left, 0px);
+}
+
+@keyframes valor-btn-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(250,204,21,0.3); }
+  50% { box-shadow: 0 0 20px rgba(250,204,21,0.6); }
 }
 
 body {
   font-family: 'Spectral', 'Georgia', serif;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Use dynamic viewport height for true fullscreen on mobile */
+.game-root {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Hide scrollbar and prevent pull-to-refresh */
+html, body {
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 .font-cinzel {
@@ -92,4 +117,206 @@ body {
   0% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-10px) scale(1.01); }
   100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes slide-down {
+  0% { transform: translateY(-20px); opacity: 0; }
+  15% { transform: translateY(0); opacity: 1; }
+  85% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-10px); opacity: 0; }
+}
+
+.animate-slide-down {
+  animation: slide-down 4s ease-out forwards;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px currentColor; opacity: 1; }
+  50% { box-shadow: 0 0 20px currentColor; opacity: 0.85; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes combo-entrance {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes timer-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+@keyframes daily-glow {
+  0%, 100% { box-shadow: 0 0 4px rgba(234,179,8,0.2); }
+  50% { box-shadow: 0 0 16px rgba(234,179,8,0.4); }
+}
+
+.vignette-low-health {
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(180, 30, 30, 0.25) 100%);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Force landscape on mobile — rotate prompt overlay */
+@media (max-width: 932px) and (orientation: portrait) and (pointer: coarse) {
+  .rotate-prompt {
+    display: flex !important;
+  }
+  #root {
+    display: none !important;
+  }
+}
+
+.rotate-prompt {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #0a0706;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  color: #f97316;
+  font-family: 'Spectral', 'Georgia', serif;
+  text-align: center;
+  padding: 2rem;
+}
+
+.rotate-prompt svg {
+  width: 80px;
+  height: 80px;
+  animation: rotate-hint 2s ease-in-out infinite;
+}
+
+@keyframes rotate-hint {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(90deg); }
+}
+
+/* Screen transitions */
+@keyframes screen-enter {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes screen-exit {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.screen-enter {
+  animation: screen-enter 400ms ease-out both;
+}
+
+.screen-exit {
+  animation: screen-exit 300ms ease-in both;
+}
+
+/* Typewriter cursor blink */
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: currentColor;
+  margin-left: 2px;
+  animation: blink-cursor 0.8s step-end infinite;
+}
+
+/* Portrait slide-in */
+@keyframes portrait-slide {
+  0% { transform: translateX(-20px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.portrait-enter {
+  animation: portrait-slide 300ms ease-out both;
+}
+
+/* Valor ready pulse */
+@keyframes valor-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 102, 0, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(255, 102, 0, 0.6); }
+}
+
+.valor-ready-pulse {
+  animation: valor-pulse 1.5s ease-in-out infinite;
+}
+
+/* Kill feedback float */
+@keyframes kill-float {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-30px) scale(1.2); }
+}
+
+.kill-float {
+  animation: kill-float 0.8s ease-out forwards;
+  pointer-events: none;
+}
+
+/* Mythic combo edge glow */
+@keyframes mythic-glow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+.mythic-edge-glow {
+  animation: mythic-glow 1.5s ease-in-out infinite;
+}
+
+/* Battle cry flash */
+@keyframes battle-cry {
+  0% { opacity: 0; transform: scale(0.8) translateY(10px); }
+  15% { opacity: 1; transform: scale(1.05) translateY(0); }
+  70% { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(0.95) translateY(-10px); }
+}
+
+.battle-cry-flash {
+  animation: battle-cry 1.5s ease-out forwards;
+}
+
+/* Breathing key hint */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+.breathe {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+/* Saffron horizontal rule gradient */
+.saffron-rule {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f97316, #fbbf24, #f97316, transparent);
+  border: none;
+}
+
+/* Scorecard ember background */
+@keyframes scorecard-ember {
+  0% { transform: translateY(0); opacity: 0.3; }
+  50% { transform: translateY(-20px); opacity: 0.6; }
+  100% { transform: translateY(-40px); opacity: 0; }
+}
+
+.scorecard-ember-field::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1.5px 1.5px at 15% 90%, rgba(249, 115, 22, 0.6) 0, transparent 60%),
+    radial-gradient(2px 2px at 40% 85%, rgba(234, 88, 12, 0.5) 0, transparent 60%),
+    radial-gradient(1.5px 1.5px at 65% 95%, rgba(251, 146, 60, 0.5) 0, transparent 60%),
+    radial-gradient(2px 2px at 85% 88%, rgba(239, 68, 68, 0.4) 0, transparent 60%);
+  animation: scorecard-ember 4s linear infinite;
 }

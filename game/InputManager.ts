@@ -5,15 +5,32 @@ export class InputManager {
   public keys: Record<string, boolean> = {};
   public mouseButtons: Record<number, boolean> = {};
   public mouseDelta = new THREE.Vector2();
+  private virtualMode = false;
+
+  private boundKeyDown: (e: KeyboardEvent) => void;
+  private boundKeyUp: (e: KeyboardEvent) => void;
+  private boundMouseDown: (e: MouseEvent) => void;
+  private boundMouseUp: (e: MouseEvent) => void;
+  private boundMouseMove: (e: MouseEvent) => void;
+  private boundBlur: () => void;
+  private boundContextMenu: (e: Event) => void;
 
   constructor() {
-    window.addEventListener('keydown', this.onKeyDown.bind(this));
-    window.addEventListener('keyup', this.onKeyUp.bind(this));
-    window.addEventListener('mousedown', this.onMouseDown.bind(this));
-    window.addEventListener('mouseup', this.onMouseUp.bind(this));
-    window.addEventListener('mousemove', this.onMouseMove.bind(this));
-    window.addEventListener('blur', this.resetInput.bind(this));
-    window.addEventListener('contextmenu', e => e.preventDefault());
+    this.boundKeyDown = this.onKeyDown.bind(this);
+    this.boundKeyUp = this.onKeyUp.bind(this);
+    this.boundMouseDown = this.onMouseDown.bind(this);
+    this.boundMouseUp = this.onMouseUp.bind(this);
+    this.boundMouseMove = this.onMouseMove.bind(this);
+    this.boundBlur = this.resetInput.bind(this);
+    this.boundContextMenu = (e: Event) => e.preventDefault();
+
+    window.addEventListener('keydown', this.boundKeyDown);
+    window.addEventListener('keyup', this.boundKeyUp);
+    window.addEventListener('mousedown', this.boundMouseDown);
+    window.addEventListener('mouseup', this.boundMouseUp);
+    window.addEventListener('mousemove', this.boundMouseMove);
+    window.addEventListener('blur', this.boundBlur);
+    window.addEventListener('contextmenu', this.boundContextMenu);
   }
 
   private resetInput() {
@@ -33,6 +50,28 @@ export class InputManager {
     }
   }
 
+  public setKey(key: string, pressed: boolean) {
+    this.keys[key.toLowerCase()] = pressed;
+  }
+
+  public setMouseButton(button: number, pressed: boolean) {
+    this.mouseButtons[button] = pressed;
+  }
+
+  public addMouseDelta(x: number, y: number) {
+    this.mouseDelta.x += x;
+    this.mouseDelta.y += y;
+  }
+
+  public setVirtualMode(enabled: boolean) {
+    this.virtualMode = enabled;
+  }
+
+  /** Returns true when input should be accepted (pointer locked on desktop, or virtual mode on mobile) */
+  public isInputActive(): boolean {
+    return !!document.pointerLockElement || this.virtualMode;
+  }
+
   public lockPointer(element: HTMLElement) {
     element.addEventListener('mousedown', () => {
       if (!document.pointerLockElement) {
@@ -42,6 +81,12 @@ export class InputManager {
   }
 
   public dispose() {
-    // Ideally remove listeners
+    window.removeEventListener('keydown', this.boundKeyDown);
+    window.removeEventListener('keyup', this.boundKeyUp);
+    window.removeEventListener('mousedown', this.boundMouseDown);
+    window.removeEventListener('mouseup', this.boundMouseUp);
+    window.removeEventListener('mousemove', this.boundMouseMove);
+    window.removeEventListener('blur', this.boundBlur);
+    window.removeEventListener('contextmenu', this.boundContextMenu);
   }
 }

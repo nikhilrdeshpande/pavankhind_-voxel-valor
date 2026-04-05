@@ -1,0 +1,79 @@
+# Pavankhind Gameplay Guide
+
+This document describes the core gameplay systems, terms, and UI elements.
+
+## Core Objective
+
+- Survive 5 minutes until the third cannon.
+- Build score by defeating enemies and completing objectives.
+
+## Combat Basics
+
+- Strike: Left Click.
+- Block: Right Click (holds the shield stance).
+- Parry: Tap Right Click at impact to negate damage.
+- Dodge: `Space` for a short burst with i-frames.
+
+## Valor
+
+- Valor fills on hits.
+- When full, press `V` to unleash a Valor Strike (area kill).
+- Valor drains slowly if you stop chaining hits.
+
+## Combo Tiers
+
+- FURY: Combo x2–x5
+- ONSLAUGHT: Combo x6–x8
+- MYTHIC: Combo x9+
+
+## Enemy Types
+
+- STANDARD: Balanced melee enemy.
+- RUSHER: Faster, lower health.
+- SHIELDER: Blocks frontal attacks until shield stamina breaks.
+- ARCHER: Ranged unit; fires arrows from distance.
+- BRUTE: Slow, high HP, heavy damage.
+- MINI-BOSS: Large elite with high HP and heavy hits.
+
+## Weapon Upgrades
+
+- Weapon level increases every 8 kills (up to Lv 4).
+- Each level boosts attack power.
+
+## Objectives
+
+- “Hold the Line” appears periodically.
+- Stay near the objective zone to fill the meter and complete it.
+- Completing objectives grants bonus score.
+
+## Perk Choices
+
+- Every 60 seconds, pick one of three perks:
+  - Blade of Bhavani: +20% damage.
+  - Steel Spirit: +40% stamina regen + instant heal.
+  - War Cry: +30% Valor gain.
+
+## Difficulty Scaling
+
+- Waves intensify over time.
+- Mini-bosses appear every 2 waves.
+- Enemy difficulty scales with time and score.
+
+## HUD Elements
+
+- Vitality: Health bar.
+- Spirit: Stamina bar.
+- Valor: Ultimate meter.
+- Wave: Current wave count.
+- Weapon Lv: Current weapon level.
+- Objective Meter: Progress and time remaining.
+- Combo Banner: FURY / ONSLAUGHT / MYTHIC tiers.
+
+## Scorecard & Medals
+
+- Max Combo, Damage Taken, Valor Strikes, Objectives Completed.
+- Medals:
+  - Wall of Steel: Low damage taken.
+  - Relentless: High combo achieved.
+  - Valorous: Valor Strike used.
+  - Banner Holder: Objective completed.
