@@ -4,62 +4,126 @@
 
 # Pavankhind: The Stand of the 300
 
-Hold the pass as Baji Prabhu. Survive the five-minute stand, build Valor, and cut through waves of Sultanate elites.
+A 3D action game built with Three.js and React. Hold the mountain pass as Baji Prabhu Deshpande and his 300 Maratha warriors against waves of Sultanate forces. Survive until the third cannon signals Shivaji Maharaj's safe arrival at Vishalgad.
 
-## Gameplay
+## Setup
 
-- Survive 5 minutes until the third cannon.
-- Score increases with kills and objectives.
-- Waves intensify over time, with mini-bosses appearing.
-- Weapon level increases as your kill count rises.
+**Prerequisites:** Node.js 18+
 
-## Controls
+```bash
+git clone https://github.com/nikhilrdeshpande/pavankhind_-voxel-valor.git
+cd pavankhind_-voxel-valor
+npm install
+npm run dev
+```
 
-- Move: `W A S D`
-- Look: Mouse
-- Strike: Left Click
-- Block/Parry: Right Click (tap to parry)
-- Dodge: `Space`
-- Valor Strike: `V` (when Valor is full)
-- Pause: `P`
-- Controls: `C`
-- Quit: `Q`
+Open `http://localhost:5173` in your browser. The game runs entirely client-side — no backend required.
 
-## Valor + Parry
+### Mobile Testing
 
-- Valor fills on hits. When full, press `V` to unleash a Valor Strike.
-- Parry by tapping Right Click at the moment of impact to negate damage.
+Add `?mobile` to the URL (`http://localhost:5173?mobile`) to force mobile mode on desktop for testing touch controls and mobile UI layout.
 
-## Combo Tiers
+### Build for Production
 
-- FURY: Combo x2–x5
-- ONSLAUGHT: Combo x6–x8
-- MYTHIC: Combo x9+
+```bash
+npm run build
+npm run preview   # preview the production build locally
+```
 
-## Objectives
+Output goes to `dist/` — deploy to any static host (Vercel, Netlify, GitHub Pages).
 
-- Periodic “Hold the Line” moments appear. Stay near the zone to complete and gain bonus score.
+## How to Play
 
-## Audio
+### Desktop Controls
 
-- Intro chant uses `public/har-har-mahadev.mp3`.
-- Mute toggle is at the top-right during all screens.
+| Action | Key |
+|--------|-----|
+| Move | `W` `A` `S` `D` |
+| Look | Mouse |
+| Strike | Left Click |
+| Block | Right Click (hold) |
+| Parry | Right Click (tap at moment of impact) |
+| Dodge | `Space` |
+| Valor Strike | `V` (when Valor bar is full) |
+| Pause | `P` or `Escape` |
 
-## Run Locally
+### Mobile Controls
 
-**Prerequisites:** Node.js
+- **Left joystick** — movement
+- **ATK** — attack (long press to toggle auto-attack)
+- **Block** — hold to block, tap to parry
+- **Dodge** — invulnerability roll
+- **Valor** — appears with golden glow when Valor is full
+- **Center screen** — drag to look around
 
-1. Install dependencies:
-   `npm install`
-2. (Optional) Set the `GEMINI_API_KEY` in [.env.local](.env.local) if you use Gemini features.
-3. Run the app:
-   `npm run dev`
+### Combat System
 
-## Build
+- **Combo tiers:** Fury (3+), Onslaught (6+), Mythic (9+) — each tier adds audio layers and visual intensity
+- **Valor:** Fills on hits. When full, press V for a devastating area strike that kills all nearby enemies
+- **Parry:** Tap block at the moment of impact to negate damage, restore stamina, and gain Valor
+- **Perks:** Choose from 3 perks every 60 seconds (Blade of Bhavani, Steel Spirit, War Cry)
+- **Weapon upgrades:** Every 5 kills your weapon level increases
 
-`npm run build`
+### Objectives
 
-## Tech
+Periodic "Hold the Line" zones appear — stay inside to complete them for bonus score and coins.
 
-- React + Vite
-- Three.js
+## Game Modes
+
+| Mode | Duration | Starting Wave |
+|------|----------|---------------|
+| Skirmish | 90s | Wave 1 |
+| Battle | 180s | Wave 2 |
+| Last Stand | 300s | Wave 3 |
+| Daily Challenge | 120s | Wave 2 + random modifier |
+
+**Daily modifiers:** Archers Only, Double Speed, No Blocking, Boss Rush, Fog of War.
+
+## Features
+
+- **6 enemy types** — Standard, Rusher, Shielder, Archer, Brute, Mini-Boss (multi-phase)
+- **Procedural audio** — Dhol drums, ambient soundscape, combat SFX all synthesized via Web Audio API (no audio files except intro chant)
+- **Post-processing** — Vignette, fake bloom, screen-space god rays, chromatic aberration, film grain, dynamic color grading
+- **Dynamic time-of-day** — Sky, fog, and lighting shift from amber sunset to crimson dusk as the timer counts down
+- **Procedural animations** — Walk cycles, idle breathing, cape Verlet physics, flag ripple — all code-driven
+- **Progression** — 5 ranks, coin economy, 15 achievements, 10 cosmetic skins, 10-tier battle pass
+- **Bilingual** — Full Marathi + English localization
+- **Mobile-first** — Landscape-enforced, touch controls, safe area insets, fullscreen
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 + TypeScript |
+| Build | Vite 6 |
+| 3D Engine | Three.js 0.182 |
+| Styling | Tailwind CSS (CDN) |
+| Audio | Web Audio API (procedural synthesis) |
+| Storage | localStorage (profile, cosmetics, daily progress) |
+
+## Project Structure
+
+```
+game/           Core game systems
+  Engine.ts       Game loop, post-processing, state management
+  Player.ts       Player model, combat, animations, camera
+  EnemyManager.ts Enemy AI, spawning, types, VFX
+  World.ts        Environment, sky, terrain, water, particles
+  AudioManager.ts Procedural audio engine
+  ParticlePool.ts Pooled instanced particle system
+  InputManager.ts Keyboard, mouse, virtual touch input
+
+components/     React UI
+  HUD.tsx         In-game health/stamina/valor/score/timer
+  MobileControls  Virtual joystick and action buttons
+  StartScreen     Title screen
+  StoryScreen     Opening dialogue
+  ModeSelectScreen Mode picker + daily challenge
+  PauseMenu       Pause overlay with perk selection
+  Scorecard       End-of-run results and sharing
+  StoreScreen     Cosmetic shop
+  BattlePassScreen Seasonal progression
+
+localization/   Marathi + English string tables
+monetization/   Ad stub + battle pass logic
+```
