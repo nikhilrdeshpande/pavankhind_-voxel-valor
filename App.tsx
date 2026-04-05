@@ -389,28 +389,30 @@ const App: React.FC = () => {
         hideCursor={gameActive}
         gameConfig={isDailyMode ? getDailyConfig() : GAME_MODES[selectedModeKey]}
       />
-      <div className={`absolute top-4 right-4 z-50 flex gap-2 ${isPlaying ? 'hidden' : ''}`}>
-        <button
-          onClick={() => setLang(l => l === 'mr' ? 'en' : 'mr')}
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-orange-500/70 bg-black/40 text-orange-200 hover:bg-orange-500 hover:text-black transition-all text-xs font-bold"
-          aria-label="Toggle language"
-        >
-          {lang === 'mr' ? 'EN' : 'मर'}
-        </button>
-        <button
-          onClick={() => setMuted(prev => !prev)}
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-orange-500/70 bg-black/40 text-orange-200 hover:bg-orange-500 hover:text-black transition-all"
-          aria-label={muted ? 'Unmute' : 'Mute'}
-        >
-          <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
-            {muted ? (
-              <path d="M4 9v6h4l5 4V5L8 9H4zm12.59-3.41L15.17 7l2.83 2.83L15.17 12l1.42 1.41L19 10.83l2.83 2.83L23.25 12l-2.83-2.83 2.83-2.83L21.83 4l-2.83 2.83L16.17 4l-.58 1.59z" />
-            ) : (
-              <path d="M4 9v6h4l5 4V5L8 9H4zm9.5 3a3.5 3.5 0 0 0-1.5-2.87v5.74A3.5 3.5 0 0 0 13.5 12zm0-7a8.5 8.5 0 0 0-3.5-6.9v2.3A6.5 6.5 0 0 1 16 12a6.5 6.5 0 0 1-3.5 5.6v2.3A8.5 8.5 0 0 0 13.5 5z" />
-            )}
-          </svg>
-        </button>
-      </div>
+      {!isPlaying && (
+        <div className="absolute top-4 right-4 z-50 flex gap-2">
+          <button
+            onClick={() => setLang(l => l === 'mr' ? 'en' : 'mr')}
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-orange-500/70 bg-black/40 text-orange-200 hover:bg-orange-500 hover:text-black transition-all text-xs font-bold"
+            aria-label="Toggle language"
+          >
+            {lang === 'mr' ? 'EN' : 'मर'}
+          </button>
+          <button
+            onClick={() => setMuted(prev => !prev)}
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-orange-500/70 bg-black/40 text-orange-200 hover:bg-orange-500 hover:text-black transition-all"
+            aria-label={muted ? 'Unmute' : 'Mute'}
+          >
+            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
+              {muted ? (
+                <path d="M4 9v6h4l5 4V5L8 9H4zm12.59-3.41L15.17 7l2.83 2.83L15.17 12l1.42 1.41L19 10.83l2.83 2.83L23.25 12l-2.83-2.83 2.83-2.83L21.83 4l-2.83 2.83L16.17 4l-.58 1.59z" />
+              ) : (
+                <path d="M4 9v6h4l5 4V5L8 9H4zm9.5 3a3.5 3.5 0 0 0-1.5-2.87v5.74A3.5 3.5 0 0 0 13.5 12zm0-7a8.5 8.5 0 0 0-3.5-6.9v2.3A6.5 6.5 0 0 1 16 12a6.5 6.5 0 0 1-3.5 5.6v2.3A8.5 8.5 0 0 0 13.5 5z" />
+              )}
+            </svg>
+          </button>
+        </div>
+      )}
 
       <AchievementToast achievements={newAchievements} lang={lang} />
 
