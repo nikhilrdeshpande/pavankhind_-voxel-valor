@@ -50,7 +50,7 @@ export class Player {
   private leftSwordPivot!: THREE.Group;
   private shieldGroup: THREE.Group | null = null;
   private hasShield = false;
-  private cameraOffset = new THREE.Vector3(0, 4.0, 9.0);
+  private cameraOffset = new THREE.Vector3(0, 2.8, 12.0);
   private cameraShake = 0;
   private damagePulse = 0;
   private minZ = -1300;
@@ -955,9 +955,9 @@ export class Player {
   }
 
   private updateCamera(delta: number) {
-    // Dynamic camera offset based on game state
-    const baseZ = 9.0;
-    const baseY = 4.0;
+    // Dynamic camera offset — lower and further back for level feel
+    const baseZ = 12.0;
+    const baseY = 2.8;
 
     // Combo pull-back: wider view at high combos
     const comboZ = this.comboCount >= 5 ? 2.0 : 0;
@@ -986,11 +986,11 @@ export class Player {
     }
     this.camera.position.lerp(targetPos, delta * 15);
 
-    // Look at player + forward offset (simple trig, no quaternion)
+    // Look at a point ahead of the player at eye level (more level view)
     const lookPoint = new THREE.Vector3(
-      this.mesh.position.x - sinY * 10,
-      this.mesh.position.y + 1.5,
-      this.mesh.position.z - cosY * 10
+      this.mesh.position.x - sinY * 15,
+      this.mesh.position.y + 2.0,
+      this.mesh.position.z - cosY * 15
     );
     this.camera.lookAt(lookPoint);
 
