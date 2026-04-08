@@ -150,22 +150,35 @@ const Scorecard: React.FC<ScorecardProps> = ({
             transform: visibleStep >= 4 ? 'translateY(0)' : 'translateY(10px)',
             transition: 'all 0.4s ease-out',
           }}>
-            <div className={`${isMobile ? 'mt-2 text-[10px] grid-cols-3' : 'mt-4 text-xs md:grid-cols-3'} grid gap-2 uppercase tracking-[0.2em] text-orange-200/70`}>
-              <div>+{animCoins} {t.scorecard.coins}</div>
-              <div className="flex items-center justify-center gap-1">
-                <span className="inline-block w-2 h-2 rounded-full" style={{
-                  background: 'linear-gradient(135deg, #d97706, #f59e0b)',
-                  boxShadow: '0 0 6px rgba(217,119,6,0.4)',
-                }} />
+            {/* Coins earned — prominent */}
+            <div className={`${isMobile ? 'mt-3' : 'mt-5'} flex items-center justify-center gap-2`}>
+              <span className="inline-block w-5 h-5 rounded-full" style={{
+                background: 'linear-gradient(135deg, #d97706, #fbbf24)',
+                boxShadow: '0 0 12px rgba(251,191,36,0.5)',
+              }} />
+              <span className={`${isMobile ? 'text-lg' : 'text-2xl'} font-black`} style={{
+                color: '#fbbf24',
+                textShadow: '0 0 12px rgba(251,191,36,0.4)',
+              }}>+{animCoins}</span>
+              <span className={`${isMobile ? 'text-xs' : 'text-sm'} uppercase tracking-wider text-yellow-200/60`}>{t.scorecard.coins}</span>
+            </div>
+
+            {/* Rank + New Best */}
+            <div className={`${isMobile ? 'mt-2' : 'mt-3'} flex items-center justify-center gap-3`}>
+              <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{
+                background: 'linear-gradient(135deg, rgba(217,119,6,0.3), rgba(180,83,9,0.2))',
+                border: '1px solid rgba(217,119,6,0.4)',
+                color: '#fbbf24',
+              }}>
                 {t.scorecard.rank}: {getRankName(profile.totalKills)}
-              </div>
+              </span>
               {lastRunNewBest && (
-                <div className="text-yellow-400" style={{
+                <span className={`${isMobile ? 'text-sm' : 'text-base'} font-black text-yellow-400`} style={{
                   animation: 'shimmer 2s ease-in-out infinite',
-                  textShadow: '0 0 8px rgba(250,204,21,0.5)',
+                  textShadow: '0 0 12px rgba(250,204,21,0.5)',
                 }}>
-                  {t.scorecard.newBest}
-                </div>
+                  ★ {t.scorecard.newBest}
+                </span>
               )}
             </div>
           </div>
@@ -176,25 +189,45 @@ const Scorecard: React.FC<ScorecardProps> = ({
             transform: visibleStep >= 5 ? 'translateY(0)' : 'translateY(10px)',
             transition: 'all 0.4s ease-out',
           }}>
-            <div className={`${isMobile ? 'mt-2 gap-1 text-[9px]' : 'mt-6 gap-2 text-xs'} flex flex-wrap justify-center uppercase tracking-[0.2em] text-orange-100`}>
+            <div className={`${isMobile ? 'mt-3 gap-2 text-xs' : 'mt-6 gap-3 text-sm'} flex flex-wrap justify-center`}>
               {damageTaken < 40 && (
-                <span className={`${isMobile ? 'px-2 py-0.5' : 'px-3 py-1'} border border-orange-500/50`} style={{ borderLeft: '3px solid #c0c0c0' }}>
-                  {t.medals.wallOfSteel}
+                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-sm font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
+                  background: 'linear-gradient(135deg, rgba(192,192,192,0.1), rgba(0,0,0,0.3))',
+                  border: '1.5px solid rgba(192,192,192,0.4)',
+                  color: '#e5e7eb',
+                  boxShadow: '0 0 10px rgba(192,192,192,0.1)',
+                }}>
+                  🛡 {t.medals.wallOfSteel}
                 </span>
               )}
               {maxCombo >= 8 && (
-                <span className={`${isMobile ? 'px-2 py-0.5' : 'px-3 py-1'} border border-orange-500/50`} style={{ borderLeft: '3px solid #d4a017' }}>
-                  {t.medals.relentless}
+                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-sm font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
+                  background: 'linear-gradient(135deg, rgba(212,160,23,0.15), rgba(0,0,0,0.3))',
+                  border: '1.5px solid rgba(212,160,23,0.5)',
+                  color: '#fde68a',
+                  boxShadow: '0 0 10px rgba(212,160,23,0.15)',
+                }}>
+                  ⚡ {t.medals.relentless}
                 </span>
               )}
               {valorStrikes >= 1 && (
-                <span className={`${isMobile ? 'px-2 py-0.5' : 'px-3 py-1'} border border-orange-500/50`} style={{ borderLeft: '3px solid #cd7f32' }}>
-                  {t.medals.valorous}
+                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-sm font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
+                  background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(0,0,0,0.3))',
+                  border: '1.5px solid rgba(249,115,22,0.5)',
+                  color: '#fdba74',
+                  boxShadow: '0 0 10px rgba(249,115,22,0.15)',
+                }}>
+                  🔥 {t.medals.valorous}
                 </span>
               )}
               {objectivesCompleted >= 1 && (
-                <span className={`${isMobile ? 'px-2 py-0.5' : 'px-3 py-1'} border border-orange-500/50`} style={{ borderLeft: '3px solid #c0c0c0' }}>
-                  {t.medals.bannerHolder}
+                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-sm font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
+                  background: 'linear-gradient(135deg, rgba(192,192,192,0.1), rgba(0,0,0,0.3))',
+                  border: '1.5px solid rgba(192,192,192,0.4)',
+                  color: '#e5e7eb',
+                  boxShadow: '0 0 10px rgba(192,192,192,0.1)',
+                }}>
+                  🚩 {t.medals.bannerHolder}
                 </span>
               )}
             </div>
@@ -210,9 +243,15 @@ const Scorecard: React.FC<ScorecardProps> = ({
               {canDoubleCoins && (
                 <button
                   onClick={onDoubleCoins}
-                  className={`${isMobile ? 'px-4 py-2 text-xs' : 'px-6 py-3 text-xs'} border-2 border-yellow-500 text-yellow-200 hover:bg-yellow-600 hover:text-black font-bold uppercase tracking-widest`}
+                  className={`${isMobile ? 'px-5 py-2.5 text-sm' : 'px-6 py-3 text-sm'} font-black uppercase tracking-widest rounded-sm transition-all`}
+                  style={{
+                    background: 'linear-gradient(135deg, #b45309, #d97706, #fbbf24)',
+                    color: '#451a03',
+                    border: '1.5px solid rgba(251,191,36,0.6)',
+                    boxShadow: '0 0 16px rgba(251,191,36,0.3)',
+                  }}
                 >
-                  2x Coins
+                  🪙 2X Coins
                 </button>
               )}
               <button

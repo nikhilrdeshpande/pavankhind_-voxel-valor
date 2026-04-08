@@ -72,6 +72,10 @@ export class InputManager {
     return !!document.pointerLockElement || this.virtualMode;
   }
 
+  public clearMouseDelta() {
+    this.mouseDelta.set(0, 0);
+  }
+
   public lockPointer(element: HTMLElement) {
     element.addEventListener('mousedown', () => {
       if (!document.pointerLockElement) {

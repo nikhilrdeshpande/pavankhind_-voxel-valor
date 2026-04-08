@@ -47,6 +47,9 @@ export class Player {
   private rightArm: THREE.Group;
   private leftArm: THREE.Group;
   private leftSword: THREE.Mesh;
+  private leftSwordPivot!: THREE.Group;
+  private shieldGroup: THREE.Group | null = null;
+  private hasShield = false;
   private cameraOffset = new THREE.Vector3(0, 4.0, 9.0);
   private cameraShake = 0;
   private damagePulse = 0;
@@ -405,27 +408,27 @@ export class Player {
     lVambrace.position.y = -0.65;
     this.leftArm.add(lVambrace);
 
-    const leftSwordPivot = new THREE.Group();
-    leftSwordPivot.position.set(0, -0.9, -0.1);
-    this.leftArm.add(leftSwordPivot);
+    this.leftSwordPivot = new THREE.Group();
+    this.leftSwordPivot.position.set(0, -0.9, -0.1);
+    this.leftArm.add(this.leftSwordPivot);
     this.leftSword = new THREE.Mesh(
       new THREE.BoxGeometry(0.12, 2.7, 0.05),
       new THREE.MeshStandardMaterial({ color: 0xe5e7eb, metalness: 0.9, roughness: 0.2 })
     );
     this.leftSword.position.y = 1.6;
-    leftSwordPivot.add(this.leftSword);
+    this.leftSwordPivot.add(this.leftSword);
     // Cross-guard
     const crossGuardL = new THREE.Mesh(
       new THREE.BoxGeometry(0.35, 0.07, 0.07),
       goldMat
     );
     crossGuardL.position.y = 0.25;
-    leftSwordPivot.add(crossGuardL);
+    this.leftSwordPivot.add(crossGuardL);
 
     // Left sword pommel
     const pommelL = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), goldMat);
     pommelL.position.y = 0.15;
-    leftSwordPivot.add(pommelL);
+    this.leftSwordPivot.add(pommelL);
 
     this.leftArm.position.set(-0.65, 1.7, 0);
     this.mesh.add(this.leftArm);
@@ -573,6 +576,65 @@ export class Player {
     } else {
       trailMat.uniforms.uColor.value.setHex(0xff8833);
     }
+  }
+
+  public applyShield(faceColor: number, rimColor: number, emblemColor: number) {
+    // Remove left sword, add shield
+    this.leftSwordPivot.visible = false;
+    this.hasShield = true;
+
+    // Remove old shield if exists
+    if (this.shieldGroup) {
+      this.leftArm.remove(this.shieldGroup);
+    }
+
+    this.shieldGroup = new THREE.Group();
+    this.shieldGroup.position.set(0, -0.5, -0.3);
+    this.shieldGroup.rotation.x = -0.3;
+
+    // Shield face — circular dhal (traditional Maratha round shield)
+    const faceMat = new THREE.MeshStandardMaterial({ color: faceColor, roughness: 0.6, metalness: 0.3 });
+    const face = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.06, 12), faceMat);
+    face.rotation.x = Math.PI / 2;
+    this.shieldGroup.add(face);
+
+    // Shield rim — golden ring
+    const rimMat = new THREE.MeshStandardMaterial({ color: rimColor, roughness: 0.3, metalness: 0.7 });
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.04, 8, 16), rimMat);
+    rim.rotation.x = Math.PI / 2;
+    this.shieldGroup.add(rim);
+
+    // Center boss (umbo)
+    const bossMat = new THREE.MeshStandardMaterial({ color: rimColor, roughness: 0.3, metalness: 0.8, emissive: emblemColor, emissiveIntensity: 0.2 });
+    const boss = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bossMat);
+    boss.position.z = 0.04;
+    this.shieldGroup.add(boss);
+
+    // Decorative studs (4 around center)
+    const studMat = new THREE.MeshStandardMaterial({ color: emblemColor, metalness: 0.6, roughness: 0.4 });
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2;
+      const stud = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), studMat);
+      stud.position.set(Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, 0.04);
+      this.shieldGroup.add(stud);
+    }
+
+    // Grip handle on back
+    const gripMat = new THREE.MeshStandardMaterial({ color: 0x3a2a18, roughness: 0.9 });
+    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), gripMat);
+    grip.position.z = -0.05;
+    this.shieldGroup.add(grip);
+
+    this.leftArm.add(this.shieldGroup);
+  }
+
+  public removeShield() {
+    if (this.shieldGroup) {
+      this.leftArm.remove(this.shieldGroup);
+      this.shieldGroup = null;
+    }
+    this.leftSwordPivot.visible = true;
+    this.hasShield = false;
   }
 
   public applyAngarkhaSkin(torsoColor: number, sashColor: number) {

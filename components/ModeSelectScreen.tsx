@@ -37,8 +37,23 @@ const ModeSelectScreen: React.FC<ModeSelectScreenProps> = ({ t, lang, profile, i
       <div className={`relative flex h-full w-full flex-col items-center justify-center ${isMobile ? 'px-3 py-3' : 'px-6 py-12'}`}>
         <div className={`${isMobile ? 'text-xs' : 'text-xs'} uppercase tracking-[0.5em] text-orange-200/70`}>{t.ui.chooseMode}</div>
         <h2 className={`mt-1 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'} font-black uppercase text-orange-100 font-cinzel`}>{t.ui.selectMode}</h2>
-        <div className={`mt-1 ${isMobile ? 'text-xs' : 'text-xs'} uppercase tracking-[0.35em] text-orange-200/60`}>
-          {getRankName(profile.totalKills)} · {profile.currency} {t.scorecard.coins}
+        <div className={`mt-2 flex items-center justify-center gap-4`}>
+          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider`} style={{
+            background: 'linear-gradient(135deg, rgba(217,119,6,0.3), rgba(180,83,9,0.2))',
+            border: '1px solid rgba(217,119,6,0.5)',
+            color: '#fbbf24',
+            textShadow: '0 0 8px rgba(251,191,36,0.3)',
+          }}>
+            {getRankName(profile.totalKills)}
+          </span>
+          <span className="flex items-center gap-1.5 text-sm font-bold text-yellow-300">
+            <span className="inline-block w-4 h-4 rounded-full" style={{
+              background: 'linear-gradient(135deg, #d97706, #fbbf24)',
+              boxShadow: '0 0 8px rgba(251,191,36,0.4)',
+            }} />
+            {profile.currency}
+            <span className="text-xs font-normal text-orange-200/50 uppercase tracking-wider">{t.scorecard.coins}</span>
+          </span>
         </div>
 
         {/* Mode cards — horizontal scroll on mobile, grid on desktop */}
@@ -122,50 +137,81 @@ const ModeSelectScreen: React.FC<ModeSelectScreenProps> = ({ t, lang, profile, i
           </div>
         )}
 
-        {/* Daily challenge */}
+        {/* Daily challenge — styled card */}
         <button
           onClick={onSelectDaily}
-          className={`${isMobile ? 'mt-2 p-2' : 'mt-6 p-4'} w-full max-w-4xl text-left transition-all ${
-            dailyDone
-              ? 'bg-black/30 text-green-200/70'
-              : 'bg-black/40 text-yellow-100 hover:bg-yellow-600/20 cursor-pointer'
-          }`}
+          className={`${isMobile ? 'mt-3 p-3' : 'mt-6 p-5'} w-full max-w-4xl text-left transition-all rounded-sm`}
           style={{
-            border: dailyDone ? '2px solid rgba(34,197,94,0.3)' : '2px solid rgba(234,179,8,0.4)',
+            background: dailyDone
+              ? 'linear-gradient(135deg, rgba(22,101,52,0.15) 0%, rgba(0,0,0,0.5) 100%)'
+              : 'linear-gradient(135deg, rgba(120,80,0,0.15) 0%, rgba(0,0,0,0.5) 100%)',
+            border: dailyDone ? '2px solid rgba(34,197,94,0.4)' : '2px solid rgba(234,179,8,0.5)',
+            boxShadow: dailyDone ? '0 0 20px rgba(34,197,94,0.1)' : '0 0 20px rgba(234,179,8,0.1)',
             animation: dailyDone ? 'none' : 'daily-glow 2s ease-in-out infinite',
           }}
         >
           <div className="flex items-center justify-between">
-            <div>
-              <span className={`${isMobile ? 'text-sm' : 'text-sm'} font-black uppercase tracking-wide`}>{t.daily.title}</span>
-              <span className={`ml-2 ${isMobile ? 'text-[10px]' : 'text-xs'} uppercase tracking-[0.3em] opacity-70`}>
-                {lang === 'mr' ? dailyMod.nameMr : dailyMod.name}
-              </span>
+            <div className="flex items-center gap-3">
+              <span className="text-lg">{dailyDone ? '✓' : '⚔'}</span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className={`${isMobile ? 'text-sm' : 'text-base'} font-black uppercase tracking-wide ${dailyDone ? 'text-green-200' : 'text-yellow-100'}`}>
+                    {t.daily.title}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    dailyDone ? 'bg-green-800/40 text-green-300 border border-green-600/30' : 'bg-yellow-900/40 text-yellow-300 border border-yellow-600/30'
+                  }`}>
+                    {lang === 'mr' ? dailyMod.nameMr : dailyMod.name}
+                  </span>
+                </div>
+                <div className={`mt-1 ${isMobile ? 'text-[10px]' : 'text-xs'} opacity-60`}>
+                  {lang === 'mr' ? dailyMod.descMr : dailyMod.desc}
+                </div>
+              </div>
             </div>
-            {dailyDone && <span className="text-[10px] uppercase tracking-[0.3em] text-green-400">{t.daily.completed}</span>}
+            <div className="text-right flex flex-col items-end gap-1">
+              {dailyDone ? (
+                <span className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest bg-green-800/30 text-green-400 border border-green-600/30">
+                  ✓ {t.daily.completed}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-sm font-bold text-yellow-400" style={{ textShadow: '0 0 8px rgba(234,179,8,0.4)' }}>
+                  <span className="inline-block w-3 h-3 rounded-full" style={{ background: 'linear-gradient(135deg, #d97706, #fbbf24)' }} />
+                  {t.daily.bonus}
+                </span>
+              )}
+              {dailyBest > 0 && (
+                <span className="text-[10px] text-orange-200/50 uppercase tracking-wider">{t.daily.best}: {dailyBest}</span>
+              )}
+            </div>
           </div>
-          {!isMobile && (
-            <div className="mt-1 text-xs opacity-60">
-              {lang === 'mr' ? dailyMod.descMr : dailyMod.desc}
-              {!dailyDone && <span className="ml-2 text-yellow-400">{t.daily.bonus}</span>}
-              {dailyBest > 0 && <span className="ml-2">{t.daily.best}: {dailyBest}</span>}
-            </div>
-          )}
         </button>
 
         {/* Bottom row: Armory, Battle Pass, rank progress */}
         <div className={`${isMobile ? 'mt-2 gap-2' : 'mt-4 gap-4'} flex items-center flex-wrap justify-center`}>
           <button
             onClick={onOpenStore}
-            className={`${isMobile ? 'px-4 py-2 text-xs' : 'px-5 py-2 text-xs'} border border-orange-500/60 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest`}
+            className={`${isMobile ? 'px-5 py-2.5 text-xs' : 'px-6 py-3 text-xs'} font-bold uppercase tracking-widest transition-all rounded-sm`}
+            style={{
+              background: 'linear-gradient(135deg, rgba(180,83,9,0.2), rgba(120,53,0,0.3))',
+              border: '1.5px solid rgba(249,115,22,0.5)',
+              color: '#fdba74',
+              boxShadow: '0 0 12px rgba(249,115,22,0.1)',
+            }}
           >
-            Armory
+            ⚔ Armory
           </button>
           <button
             onClick={onOpenBattlePass}
-            className={`${isMobile ? 'px-4 py-2 text-xs' : 'px-5 py-2 text-xs'} border border-yellow-500/60 text-yellow-200 hover:bg-yellow-500 hover:text-black transition-all font-bold uppercase tracking-widest`}
+            className={`${isMobile ? 'px-5 py-2.5 text-xs' : 'px-6 py-3 text-xs'} font-bold uppercase tracking-widest transition-all rounded-sm`}
+            style={{
+              background: 'linear-gradient(135deg, rgba(120,80,0,0.2), rgba(80,53,0,0.3))',
+              border: '1.5px solid rgba(234,179,8,0.5)',
+              color: '#fde68a',
+              boxShadow: '0 0 12px rgba(234,179,8,0.1)',
+            }}
           >
-            Battle Pass
+            ★ Battle Pass
           </button>
           {next && (
             <div className="flex items-center gap-2">

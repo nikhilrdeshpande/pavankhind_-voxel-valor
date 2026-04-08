@@ -11,7 +11,7 @@ import { AudioManager } from './AudioManager';
 import { InputManager } from './InputManager';
 import type { GameConfig, GameStats } from './GameConfig';
 import { GAME_MODES } from './GameConfig';
-import { loadCosmeticState, getEquippedSwordSkin, getEquippedAngarkhaSkin } from './Cosmetics';
+import { loadCosmeticState, getEquippedSwordSkin, getEquippedAngarkhaSkin, getEquippedShieldSkin } from './Cosmetics';
 import { ParticlePool } from './ParticlePool';
 
 export type { GameStats } from './GameConfig';
@@ -222,6 +222,12 @@ export class PavankhindEngine {
     const angarkhaSkin = getEquippedAngarkhaSkin(cosState);
     this.player.applyAngarkhaSkin(angarkhaSkin.torsoColor, angarkhaSkin.sashColor);
 
+    // Apply shield if equipped
+    const shieldSkin = getEquippedShieldSkin(cosState);
+    if (shieldSkin) {
+      this.player.applyShield(shieldSkin.faceColor, shieldSkin.rimColor, shieldSkin.emblemColor);
+    }
+
     this.enemyManager = new EnemyManager(this.scene, this.player, this.audioManager, (points) => {
         this.score += points;
         this.enemyManager.setDifficulty(Math.floor(this.score / 3));
@@ -307,6 +313,14 @@ export class PavankhindEngine {
         this.inputManager.lockPointer(this.renderer.domElement);
       }
       this.stopIntroAudio();
+    } else {
+      // Release pointer lock when game becomes inactive (menu screens, pause)
+      // This prevents mouse movement from accumulating and tilting the camera
+      if (document.pointerLockElement) {
+        document.exitPointerLock();
+      }
+      // Clear any accumulated mouse delta
+      this.inputManager.clearMouseDelta();
     }
   }
 

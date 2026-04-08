@@ -36,18 +36,42 @@ export const ANGARKHA_SKINS: AngarkhaSkin[] = [
   { id: 'night', name: 'Night Shadow', nameMr: 'रात्रीची छाया', torsoColor: 0x1a1a2a, sashColor: 0x0a0a1a, cost: 100 },
 ];
 
+export type LeftHandType = 'sword' | 'shield';
+
+export interface ShieldSkin {
+  id: string;
+  name: string;
+  nameMr: string;
+  faceColor: number;
+  rimColor: number;
+  emblemColor: number;
+  cost: number;
+}
+
+export const SHIELD_SKINS: ShieldSkin[] = [
+  { id: 'maratha_dhal', name: 'Maratha Dhal', nameMr: 'मराठा ढाल', faceColor: 0x8b4513, rimColor: 0xd4a017, emblemColor: 0xff6600, cost: 60 },
+  { id: 'iron_buckler', name: 'Iron Buckler', nameMr: 'लोखंडी ढाल', faceColor: 0x555555, rimColor: 0x888888, emblemColor: 0xcccccc, cost: 90 },
+  { id: 'royal_guard', name: 'Royal Guard', nameMr: 'राजरक्षक ढाल', faceColor: 0x1a2a6a, rimColor: 0xd4a017, emblemColor: 0xffd700, cost: 150 },
+];
+
 export interface CosmeticState {
   ownedSwords: string[];
   ownedAngarkhas: string[];
+  ownedShields: string[];
   equippedSword: string;
   equippedAngarkha: string;
+  equippedLeftHand: LeftHandType;
+  equippedShield: string;
 }
 
 const DEFAULT_STATE: CosmeticState = {
   ownedSwords: ['default'],
   ownedAngarkhas: ['default'],
+  ownedShields: [],
   equippedSword: 'default',
   equippedAngarkha: 'default',
+  equippedLeftHand: 'sword' as LeftHandType,
+  equippedShield: '',
 };
 
 export function loadCosmeticState(): CosmeticState {
@@ -99,10 +123,37 @@ export function equipAngarkha(angarkhaId: string, state: CosmeticState) {
   }
 }
 
+export function buyShield(shieldId: string, state: CosmeticState, currency: number): { success: boolean; cost: number } {
+  const skin = SHIELD_SKINS.find(s => s.id === shieldId);
+  if (!skin || state.ownedShields.includes(shieldId)) return { success: false, cost: 0 };
+  if (currency < skin.cost) return { success: false, cost: skin.cost };
+  state.ownedShields.push(shieldId);
+  saveCosmeticState(state);
+  return { success: true, cost: skin.cost };
+}
+
+export function equipShield(shieldId: string, state: CosmeticState) {
+  if (state.ownedShields.includes(shieldId)) {
+    state.equippedShield = shieldId;
+    state.equippedLeftHand = 'shield';
+    saveCosmeticState(state);
+  }
+}
+
+export function equipLeftSword(state: CosmeticState) {
+  state.equippedLeftHand = 'sword';
+  saveCosmeticState(state);
+}
+
 export function getEquippedSwordSkin(state: CosmeticState): SwordSkin {
   return SWORD_SKINS.find(s => s.id === state.equippedSword) ?? SWORD_SKINS[0];
 }
 
 export function getEquippedAngarkhaSkin(state: CosmeticState): AngarkhaSkin {
   return ANGARKHA_SKINS.find(s => s.id === state.equippedAngarkha) ?? ANGARKHA_SKINS[0];
+}
+
+export function getEquippedShieldSkin(state: CosmeticState): ShieldSkin | null {
+  if (state.equippedLeftHand !== 'shield') return null;
+  return SHIELD_SKINS.find(s => s.id === state.equippedShield) ?? null;
 }
