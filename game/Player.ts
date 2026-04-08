@@ -806,9 +806,11 @@ export class Player {
     this.mesh.position.copy(nextPos);
 
     if (this.input.isInputActive()) {
-        // Clamp mouse delta to prevent huge jumps from accumulated movement
-        const clampedDeltaX = Math.max(-200, Math.min(200, this.input.mouseDelta.x));
-        this.mesh.rotation.y -= clampedDeltaX * 0.003;
+        // Low sensitivity + cap max turn per frame to prevent wild spinning
+        const maxTurnPerFrame = 0.06; // ~3.4 degrees max per frame
+        const rawTurn = this.input.mouseDelta.x * 0.0012;
+        const clampedTurn = Math.max(-maxTurnPerFrame, Math.min(maxTurnPerFrame, rawTurn));
+        this.mesh.rotation.y -= clampedTurn;
         this.input.mouseDelta.set(0, 0);
     }
   }
