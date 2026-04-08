@@ -997,6 +997,23 @@ export class Player {
     // Force camera perfectly level (no roll)
     this.camera.up.set(0, 1, 0);
     this.camera.rotation.z = 0;
+
+    // DEBUG: show live values (remove after fixing)
+    let dbg = document.getElementById('cam-debug');
+    if (!dbg) {
+      dbg = document.createElement('div');
+      dbg.id = 'cam-debug';
+      dbg.style.cssText = 'position:fixed;bottom:60px;left:10px;background:rgba(0,0,0,0.85);color:#0f0;font:11px monospace;padding:6px 10px;z-index:99999;pointer-events:none;white-space:pre;border:1px solid #0f0;';
+      document.body.appendChild(dbg);
+    }
+    dbg.textContent = [
+      `mesh pos: ${this.mesh.position.x.toFixed(1)}, ${this.mesh.position.y.toFixed(1)}, ${this.mesh.position.z.toFixed(1)}`,
+      `mesh rot: x=${this.mesh.rotation.x.toFixed(3)} y=${this.mesh.rotation.y.toFixed(3)} z=${this.mesh.rotation.z.toFixed(3)}`,
+      `cam  pos: ${this.camera.position.x.toFixed(1)}, ${this.camera.position.y.toFixed(1)}, ${this.camera.position.z.toFixed(1)}`,
+      `cam  rot: x=${this.camera.rotation.x.toFixed(3)} y=${this.camera.rotation.y.toFixed(3)} z=${this.camera.rotation.z.toFixed(3)}`,
+      `offset:   y=${this.cameraOffset.y.toFixed(1)} z=${this.cameraOffset.z.toFixed(1)}`,
+      `yaw: ${yaw.toFixed(3)} sinY=${sinY.toFixed(3)} cosY=${cosY.toFixed(3)}`,
+    ].join('\n');
   }
 
   private updateDust(delta: number) {
