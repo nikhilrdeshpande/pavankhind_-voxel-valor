@@ -799,8 +799,15 @@ export class Player {
     this.mesh.position.copy(nextPos);
 
     if (this.input.isInputActive()) {
-        this.mesh.rotation.y -= this.input.mouseDelta.x * 0.003;
+        // Clamp mouse delta to prevent huge jumps from accumulated movement
+        const clampedDeltaX = Math.max(-200, Math.min(200, this.input.mouseDelta.x));
+        this.mesh.rotation.y -= clampedDeltaX * 0.003;
         this.input.mouseDelta.set(0, 0);
+    }
+    // Keep mesh upright during gameplay (only Y rotation from mouse)
+    if (!this.isDead) {
+      this.mesh.rotation.x = 0;
+      this.mesh.rotation.z = 0;
     }
   }
 
@@ -960,7 +967,13 @@ export class Player {
     this.cameraOffset.z = THREE.MathUtils.lerp(this.cameraOffset.z, targetZ, delta * 5);
     this.cameraOffset.y = THREE.MathUtils.lerp(this.cameraOffset.y, baseY, delta * 5);
 
-    const idealOffset = this.cameraOffset.clone().applyQuaternion(this.mesh.quaternion);
+    // Use ONLY Y rotation for camera (ignore any X/Z tilt on the mesh)
+    const yawQuat = new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(0, 1, 0),
+      this.mesh.rotation.y
+    );
+
+    const idealOffset = this.cameraOffset.clone().applyQuaternion(yawQuat);
     const targetPos = this.mesh.position.clone().add(idealOffset);
     if (this.cameraShake > 0) {
       targetPos.x += (Math.random() - 0.5) * this.cameraShake;
@@ -976,7 +989,7 @@ export class Player {
       moveDir.set(0, 0, 0);
     }
     const lookPoint = this.mesh.position.clone()
-      .add(new THREE.Vector3(0, 1.5, -10).applyQuaternion(this.mesh.quaternion))
+      .add(new THREE.Vector3(0, 1.5, -10).applyQuaternion(yawQuat))
       .add(moveDir);
     this.camera.lookAt(lookPoint);
 
