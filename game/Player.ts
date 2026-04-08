@@ -36,6 +36,7 @@ export class Player {
   private swingTimer = 0;
   private hitStopTimer = 0;
   private swingSide = 1;
+  private swingHitEnemy = false;
   private parryTimer = 0;
   private wasBlockingInput = false;
   private dodgeTimer = 0;
@@ -502,7 +503,7 @@ export class Player {
     this.sword.localToWorld(tipWorld);
     this.sword.localToWorld(baseWorld);
 
-    if (this.swingPhase === 'STRIKE') {
+    if (this.swingPhase === 'STRIKE' && this.swingHitEnemy) {
       this.trailPositions.unshift(tipWorld.clone(), baseWorld.clone());
       if (this.trailPositions.length > this.trailMaxFrames * 2) {
         this.trailPositions.length = this.trailMaxFrames * 2;
@@ -750,6 +751,7 @@ export class Player {
   public triggerHitStop(isLethal: boolean) {
     this.hitStopTimer = isLethal ? 0.08 : 0.04;
     this.cameraShake = isLethal ? 1.2 : 0.6;
+    this.swingHitEnemy = true;
     this.comboCount++;
     this.comboTimer = 2.0;
     this.maxCombo = Math.max(this.maxCombo, this.comboCount);
@@ -876,6 +878,7 @@ export class Player {
       this.swingPhase = 'WINDUP';
       this.swingTimer = 0;
       this.swingSide *= -1;
+      this.swingHitEnemy = false;
       this.stamina -= 12;
       this.audio.playBreath(0.6);
     }
