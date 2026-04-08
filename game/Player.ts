@@ -991,10 +991,9 @@ export class Player {
     this.camera.position.lerp(targetPos, delta * 15);
 
     // Set camera rotation directly — avoid lookAt() which can flip at certain angles
-    // Camera should look in the same direction as the player (yaw only), with slight downward pitch
-    this.camera.rotation.order = 'YXZ'; // Use YXZ to prevent gimbal issues
-    this.camera.rotation.y = yaw + Math.PI; // Face same direction as player (player faces -Z in local)
-    this.camera.rotation.x = -0.15; // Slight downward pitch (~8.5 degrees)
+    this.camera.rotation.order = 'YXZ';
+    this.camera.rotation.y = yaw; // Same direction as player
+    this.camera.rotation.x = -0.12; // Slight downward pitch (~7 degrees)
     this.camera.rotation.z = 0; // Never roll
   }
 

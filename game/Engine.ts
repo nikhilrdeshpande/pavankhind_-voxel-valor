@@ -629,7 +629,7 @@ export class PavankhindEngine {
     if (!this.isActive) {
       this.camera.position.set(0, 2.8, 12);
       this.camera.rotation.order = 'YXZ';
-      this.camera.rotation.set(-0.15, Math.PI, 0);
+      this.camera.rotation.set(-0.12, 0, 0);
     }
 
     if (this.composer) {
