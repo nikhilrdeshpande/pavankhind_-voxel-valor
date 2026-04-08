@@ -801,6 +801,7 @@ export class Player {
 
     const nextPos = this.mesh.position.clone().add(this.velocity.clone().multiplyScalar(delta));
     nextPos.x = Math.max(-19.5, Math.min(19.5, nextPos.x));
+    nextPos.y = 0; // Keep player on ground — never float
     nextPos.z = Math.max(this.minZ, Math.min(this.maxZ, nextPos.z));
     this.mesh.position.copy(nextPos);
 
@@ -960,42 +961,42 @@ export class Player {
 
     // Combo pull-back: wider view at high combos
     const comboZ = this.comboCount >= 5 ? 2.0 : 0;
-    // Dodge dutch angle
-    const dodgeTilt = this.dodgeTimer > 0 ? Math.sin(this.dodgeTimer / 0.25 * Math.PI) * 0.04 : 0;
 
     // Lerp camera offset
     const targetZ = baseZ + comboZ;
     this.cameraOffset.z = THREE.MathUtils.lerp(this.cameraOffset.z, targetZ, delta * 5);
     this.cameraOffset.y = THREE.MathUtils.lerp(this.cameraOffset.y, baseY, delta * 5);
 
-    // Use ONLY Y rotation for camera (ignore any X/Z tilt on the mesh)
-    const yawQuat = new THREE.Quaternion().setFromAxisAngle(
-      new THREE.Vector3(0, 1, 0),
-      this.mesh.rotation.y
+    // Compute camera position using simple trig (avoid quaternion issues entirely)
+    const yaw = this.mesh.rotation.y;
+    const sinY = Math.sin(yaw);
+    const cosY = Math.cos(yaw);
+    const offX = this.cameraOffset.x * cosY + this.cameraOffset.z * sinY;
+    const offZ = -this.cameraOffset.x * sinY + this.cameraOffset.z * cosY;
+
+    const targetPos = new THREE.Vector3(
+      this.mesh.position.x + offX,
+      this.mesh.position.y + this.cameraOffset.y,
+      this.mesh.position.z + offZ
     );
 
-    const idealOffset = this.cameraOffset.clone().applyQuaternion(yawQuat);
-    const targetPos = this.mesh.position.clone().add(idealOffset);
     if (this.cameraShake > 0) {
       targetPos.x += (Math.random() - 0.5) * this.cameraShake;
       targetPos.y += (Math.random() - 0.5) * this.cameraShake;
     }
     this.camera.position.lerp(targetPos, delta * 15);
 
-    // Look-ahead: offset target in movement direction
-    const moveDir = this.velocity.clone();
-    if (moveDir.length() > 1) {
-      moveDir.normalize().multiplyScalar(2);
-    } else {
-      moveDir.set(0, 0, 0);
-    }
-    const lookPoint = this.mesh.position.clone()
-      .add(new THREE.Vector3(0, 1.5, -10).applyQuaternion(yawQuat))
-      .add(moveDir);
+    // Look at player + forward offset (simple trig, no quaternion)
+    const lookPoint = new THREE.Vector3(
+      this.mesh.position.x - sinY * 10,
+      this.mesh.position.y + 1.5,
+      this.mesh.position.z - cosY * 10
+    );
     this.camera.lookAt(lookPoint);
 
-    // Dodge dutch angle
-    this.camera.rotation.z = THREE.MathUtils.lerp(this.camera.rotation.z, dodgeTilt, delta * 10);
+    // Force camera perfectly level (no roll)
+    this.camera.up.set(0, 1, 0);
+    this.camera.rotation.z = 0;
   }
 
   private updateDust(delta: number) {
