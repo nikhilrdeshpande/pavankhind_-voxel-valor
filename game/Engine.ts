@@ -625,13 +625,11 @@ export class PavankhindEngine {
       console.error('[PavankhindEngine] update error:', err);
     }
 
-    // When game is not active (menu screens), keep camera level and stable
+    // When game is not active (menu screens), keep camera stable
     if (!this.isActive) {
-      this.camera.up.set(0, 1, 0);
-      this.camera.rotation.z = 0;
-      // Reset player position to prevent tilted background
       this.camera.position.set(0, 2.8, 12);
-      this.camera.lookAt(0, 2, -15);
+      this.camera.rotation.order = 'YXZ';
+      this.camera.rotation.set(-0.15, Math.PI, 0);
     }
 
     if (this.composer) {

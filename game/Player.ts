@@ -806,11 +806,13 @@ export class Player {
     this.mesh.position.copy(nextPos);
 
     if (this.input.isInputActive()) {
-        // Low sensitivity + cap max turn per frame to prevent wild spinning
-        const maxTurnPerFrame = 0.06; // ~3.4 degrees max per frame
-        const rawTurn = this.input.mouseDelta.x * 0.0012;
-        const clampedTurn = Math.max(-maxTurnPerFrame, Math.min(maxTurnPerFrame, rawTurn));
+        // Low sensitivity + strict cap to prevent spinning
+        const rawTurn = this.input.mouseDelta.x * 0.0008;
+        const clampedTurn = Math.max(-0.04, Math.min(0.04, rawTurn));
         this.mesh.rotation.y -= clampedTurn;
+        // Normalize yaw to [-PI, PI] to prevent angle wraparound issues
+        while (this.mesh.rotation.y > Math.PI) this.mesh.rotation.y -= Math.PI * 2;
+        while (this.mesh.rotation.y < -Math.PI) this.mesh.rotation.y += Math.PI * 2;
         this.input.mouseDelta.set(0, 0);
     }
   }
@@ -988,34 +990,12 @@ export class Player {
     }
     this.camera.position.lerp(targetPos, delta * 15);
 
-    // Look at a point ahead of the player at eye level (more level view)
-    const lookPoint = new THREE.Vector3(
-      this.mesh.position.x - sinY * 15,
-      this.mesh.position.y + 2.0,
-      this.mesh.position.z - cosY * 15
-    );
-    this.camera.lookAt(lookPoint);
-
-    // Force camera perfectly level (no roll)
-    this.camera.up.set(0, 1, 0);
-    this.camera.rotation.z = 0;
-
-    // DEBUG: show live values (remove after fixing)
-    let dbg = document.getElementById('cam-debug');
-    if (!dbg) {
-      dbg = document.createElement('div');
-      dbg.id = 'cam-debug';
-      dbg.style.cssText = 'position:fixed;bottom:60px;left:10px;background:rgba(0,0,0,0.85);color:#0f0;font:11px monospace;padding:6px 10px;z-index:99999;pointer-events:none;white-space:pre;border:1px solid #0f0;';
-      document.body.appendChild(dbg);
-    }
-    dbg.textContent = [
-      `mesh pos: ${this.mesh.position.x.toFixed(1)}, ${this.mesh.position.y.toFixed(1)}, ${this.mesh.position.z.toFixed(1)}`,
-      `mesh rot: x=${this.mesh.rotation.x.toFixed(3)} y=${this.mesh.rotation.y.toFixed(3)} z=${this.mesh.rotation.z.toFixed(3)}`,
-      `cam  pos: ${this.camera.position.x.toFixed(1)}, ${this.camera.position.y.toFixed(1)}, ${this.camera.position.z.toFixed(1)}`,
-      `cam  rot: x=${this.camera.rotation.x.toFixed(3)} y=${this.camera.rotation.y.toFixed(3)} z=${this.camera.rotation.z.toFixed(3)}`,
-      `offset:   y=${this.cameraOffset.y.toFixed(1)} z=${this.cameraOffset.z.toFixed(1)}`,
-      `yaw: ${yaw.toFixed(3)} sinY=${sinY.toFixed(3)} cosY=${cosY.toFixed(3)}`,
-    ].join('\n');
+    // Set camera rotation directly — avoid lookAt() which can flip at certain angles
+    // Camera should look in the same direction as the player (yaw only), with slight downward pitch
+    this.camera.rotation.order = 'YXZ'; // Use YXZ to prevent gimbal issues
+    this.camera.rotation.y = yaw + Math.PI; // Face same direction as player (player faces -Z in local)
+    this.camera.rotation.x = -0.15; // Slight downward pitch (~8.5 degrees)
+    this.camera.rotation.z = 0; // Never roll
   }
 
   private updateDust(delta: number) {
