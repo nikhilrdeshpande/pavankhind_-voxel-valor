@@ -760,6 +760,12 @@ export class Player {
   }
 
   private handleMovement(delta: number) {
+    // Keep mesh upright — only Y rotation allowed during gameplay
+    if (!this.isDead) {
+      this.mesh.rotation.x = 0;
+      this.mesh.rotation.z = 0;
+    }
+
     let moveSpeed = (this.stamina < 15 ? 4 : 16);
     moveSpeed *= this.moveSpeedMultiplier;
     if (this.isBlocking) moveSpeed *= 0.4;
@@ -803,11 +809,6 @@ export class Player {
         const clampedDeltaX = Math.max(-200, Math.min(200, this.input.mouseDelta.x));
         this.mesh.rotation.y -= clampedDeltaX * 0.003;
         this.input.mouseDelta.set(0, 0);
-    }
-    // Keep mesh upright during gameplay (only Y rotation from mouse)
-    if (!this.isDead) {
-      this.mesh.rotation.x = 0;
-      this.mesh.rotation.z = 0;
     }
   }
 
