@@ -24,7 +24,7 @@ const VignetteShader = {
     uVignetteStrength: { value: 0.12 },
     uDamageFlash: { value: 0.0 },
     uScreenFlash: { value: 0.0 },
-    uColorGrading: { value: new THREE.Vector3(1.05, 1.0, 0.97) }, // subtle warm tint
+    uColorGrading: { value: new THREE.Vector3(1.0, 1.02, 1.04) }, // subtle cool Sahyadri tint
     uChromaOffset: { value: 0.0 },
     uGameProgress: { value: 0.0 }, // gameTime/duration for sunset progression
     uFilmGrain: { value: 0.03 },
@@ -175,6 +175,13 @@ export class PavankhindEngine {
   private deathSequenceActive = false;
   private deathTimer = 0;
   private proximityCheckTimer = 0;
+
+  // Tutorial + wave banner + timing
+  private tutorialStep = 0;
+  private gameElapsed = 0;
+  private prevWave = 0;
+  private waveBannerTimer = 0;
+  private enemyPosTimer = 0;
 
   // Ground decals
   private groundDecals: { mesh: THREE.Mesh; life: number }[] = [];
@@ -518,6 +525,32 @@ export class PavankhindEngine {
     // Update vignette/flash shader uniforms
     this.updatePostProcessUniforms(delta);
 
+    // Track game elapsed time
+    this.gameElapsed += delta;
+
+    // Tutorial step progression
+    if (this.tutorialStep === 0 && this.gameElapsed >= 3) this.tutorialStep = 1;
+    if (this.tutorialStep === 1 && this.gameElapsed >= 6) this.tutorialStep = 2;
+    if (this.tutorialStep === 2 && this.score > 0) this.tutorialStep = 3;
+    if (this.tutorialStep === 3 && this.player.getBlockCount() > 0) this.tutorialStep = 4;
+    if (this.tutorialStep === 4 && this.player.getDodgeCount() > 0) this.tutorialStep = 5;
+
+    // Wave transition banner
+    if (this.wave > this.prevWave && this.prevWave > 0) {
+      this.waveBannerTimer = 3.0;
+    }
+    this.prevWave = this.wave;
+    if (this.waveBannerTimer > 0) this.waveBannerTimer -= delta;
+
+    // Pass elapsed time to enemy manager for difficulty ramping
+    this.enemyManager.setGameElapsed(this.gameElapsed);
+
+    // Throttle enemy position updates to every 250ms
+    this.enemyPosTimer -= delta;
+    const enemyPositions = this.enemyPosTimer <= 0
+      ? (this.enemyPosTimer = 0.25, this.enemyManager.getEnemyPositions())
+      : [];
+
     this.callbacks.onStatsUpdate({
       health: this.player.getHealth(),
       stamina: this.player.getStamina(),
@@ -537,6 +570,13 @@ export class PavankhindEngine {
       objectiveTarget: this.objectiveActive ? this.objectiveTarget : 0,
       objectiveTimer: this.objectiveActive ? this.objectiveTimer : 0,
       objectivesCompleted: this.objectivesCompleted,
+      tutorialStep: this.tutorialStep,
+      gameElapsed: this.gameElapsed,
+      waveBanner: this.waveBannerTimer > 0 ? `WAVE ${this.wave}` : null,
+      waveBannerTimer: this.waveBannerTimer,
+      dodgeCooldown: this.player.getDodgeCooldown(),
+      enemyPositions,
+      playerYaw: this.player.getYaw(),
     });
 
     if (this.player.getHealth() <= 0 && !this.deathSequenceActive) {
@@ -627,9 +667,9 @@ export class PavankhindEngine {
 
     // When game is not active (menu screens), keep camera stable
     if (!this.isActive) {
-      this.camera.position.set(0, 2.8, 12);
+      this.camera.position.set(0, 4.5, 10);
       this.camera.rotation.order = 'YXZ';
-      this.camera.rotation.set(-0.12, 0, 0);
+      this.camera.rotation.set(-0.35, 0, 0);
     }
 
     if (this.composer) {

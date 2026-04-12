@@ -28,6 +28,8 @@ export class Player {
   private valorStrikeCooldown = 0;
   private valorStrikeArmed = false;
   private blockingDisabled = false;
+  private blockCount = 0;
+  private dodgeCount = 0;
 
   private velocity = new THREE.Vector3();
   private isBlocking = false;
@@ -51,7 +53,7 @@ export class Player {
   private leftSwordPivot!: THREE.Group;
   private shieldGroup: THREE.Group | null = null;
   private hasShield = false;
-  private cameraOffset = new THREE.Vector3(0, 2.8, 12.0);
+  private cameraOffset = new THREE.Vector3(0, 4.5, 10.0);
   private cameraShake = 0;
   private damagePulse = 0;
   private minZ = -1300;
@@ -790,6 +792,7 @@ export class Player {
     if (wantsDodge) {
       this.dodgeTimer = 0.25;
       this.dodgeCooldown = 0.6;
+      this.dodgeCount++;
       this.stamina -= 20;
       this.dodgeDir = direction.length() > 0 ? direction.clone() : new THREE.Vector3(0, 0, -1).applyQuaternion(this.mesh.quaternion);
       // Spawn afterimage
@@ -803,15 +806,16 @@ export class Player {
 
     const nextPos = this.mesh.position.clone().add(this.velocity.clone().multiplyScalar(delta));
     nextPos.x = Math.max(-19.5, Math.min(19.5, nextPos.x));
-    nextPos.y = 0; // Keep player on ground — never float
+    nextPos.y = 0.85; // Raise player so feet sit on ground surface
     nextPos.z = Math.max(this.minZ, Math.min(this.maxZ, nextPos.z));
     this.mesh.position.copy(nextPos);
 
     if (this.input.isInputActive()) {
-        // Low sensitivity + strict cap to prevent spinning
-        const rawTurn = this.input.mouseDelta.x * 0.0008;
-        const clampedTurn = Math.max(-0.04, Math.min(0.04, rawTurn));
-        this.mesh.rotation.y -= clampedTurn;
+        // Roblox-style sensitivity with smooth turning
+        const rawTurn = this.input.mouseDelta.x * 0.003;
+        const clampedTurn = Math.max(-0.15, Math.min(0.15, rawTurn));
+        const smoothedTurn = THREE.MathUtils.lerp(0, clampedTurn, 0.7);
+        this.mesh.rotation.y -= smoothedTurn;
         // Normalize yaw to [-PI, PI] to prevent angle wraparound issues
         while (this.mesh.rotation.y > Math.PI) this.mesh.rotation.y -= Math.PI * 2;
         while (this.mesh.rotation.y < -Math.PI) this.mesh.rotation.y += Math.PI * 2;
@@ -867,6 +871,7 @@ export class Player {
     const isBlockPressed = !!this.input.mouseButtons[2];
     if (isActive && isBlockPressed && !this.wasBlockingInput) {
       this.parryTimer = 0.3;
+      this.blockCount++;
     }
     this.wasBlockingInput = isBlockPressed;
 
@@ -962,9 +967,9 @@ export class Player {
   }
 
   private updateCamera(delta: number) {
-    // Dynamic camera offset — lower and further back for level feel
-    const baseZ = 12.0;
-    const baseY = 2.8;
+    // Roblox-style third-person: elevated, angled down ~20°
+    const baseZ = 10.0;
+    const baseY = 4.5;
 
     // Combo pull-back: wider view at high combos
     const comboZ = this.comboCount >= 5 ? 2.0 : 0;
@@ -991,12 +996,14 @@ export class Player {
       targetPos.x += (Math.random() - 0.5) * this.cameraShake;
       targetPos.y += (Math.random() - 0.5) * this.cameraShake;
     }
-    this.camera.position.lerp(targetPos, delta * 15);
+    // Frame-rate independent smooth follow
+    const smoothFactor = 1 - Math.pow(0.001, delta);
+    this.camera.position.lerp(targetPos, smoothFactor);
 
     // Set camera rotation directly — avoid lookAt() which can flip at certain angles
     this.camera.rotation.order = 'YXZ';
     this.camera.rotation.y = yaw; // Same direction as player
-    this.camera.rotation.x = -0.12; // Slight downward pitch (~7 degrees)
+    this.camera.rotation.x = -0.35; // 20° down pitch — see ground + incoming enemies
     this.camera.rotation.z = 0; // Never roll
   }
 
@@ -1296,6 +1303,10 @@ export class Player {
   public getTimeScale() { return this.slowmoTimer > 0 ? this.slowmoFactor : 1; }
   public isDodging() { return this.dodgeTimer > 0; }
   public getDamagePulse() { return this.damagePulse; }
+  public getBlockCount() { return this.blockCount; }
+  public getDodgeCount() { return this.dodgeCount; }
+  public getDodgeCooldown() { return this.dodgeCooldown; }
+  public getYaw() { return this.mesh.rotation.y; }
   public applyPerk(id: string) {
     if (id === 'blade') {
       this.attackMultiplier = Math.min(1.6, this.attackMultiplier + 0.2);

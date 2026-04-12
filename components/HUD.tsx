@@ -15,6 +15,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
     health, stamina, timeRemaining, score, combo, rage,
     wave, weaponLevel, perkTimer, archerWarning,
     objectiveProgress, objectiveTarget, objectiveTimer,
+    tutorialStep, gameElapsed, waveBanner, waveBannerTimer,
   } = stats;
 
   const prevScoreRef = useRef(score);
@@ -247,20 +248,29 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
         </div>
       )}
 
-      {/* Valor Ready overlay — hide on mobile (handled by MobileControls Valor button) */}
-      {!isMobile && rage >= 100 && (
+      {/* Valor indicator — always visible on desktop, shows charge progress */}
+      {!isMobile && (
         <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 text-center">
-          <div className="px-4 py-2 rounded valor-ready-pulse" style={{
-            border: '1px solid rgba(255,102,0,0.5)',
+          <div className={`px-4 py-2 rounded ${rage >= 100 ? 'valor-ready-pulse' : ''}`} style={{
+            border: rage >= 100 ? '1px solid rgba(255,102,0,0.5)' : '1px solid rgba(255,255,255,0.1)',
             background: 'rgba(0,0,0,0.5)',
           }}>
             <div className="text-xs font-black tracking-[0.4em] uppercase" style={{
-              color: '#fde047',
-              textShadow: '0 0 10px rgba(250,204,21,0.5)',
+              color: rage >= 100 ? '#fde047' : '#666',
+              textShadow: rage >= 100 ? '0 0 10px rgba(250,204,21,0.5)' : 'none',
             }}>
-              {t.ui.valorReady}
+              {rage >= 100 ? t.ui.valorReady : `VALOR ${Math.round(rage)}%`}
             </div>
-            <div className="breathe text-[10px] mt-1 text-orange-300/80 tracking-widest">V</div>
+            <div className={`text-[10px] mt-1 tracking-widest ${rage >= 100 ? 'text-orange-300/80 breathe' : 'text-gray-500'}`}>V</div>
+            {/* Progress bar */}
+            {rage < 100 && (
+              <div className="mt-1 w-20 h-1 bg-black/50 rounded-full overflow-hidden mx-auto">
+                <div className="h-full rounded-full transition-all" style={{
+                  width: `${rage}%`,
+                  background: 'linear-gradient(90deg, #d97706, #f59e0b)',
+                }} />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -320,6 +330,76 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
             background: 'linear-gradient(90deg, transparent, #c084fc, transparent)',
           }} />
         </>
+      )}
+
+      {/* ── Wave Transition Banner ── */}
+      {waveBannerTimer > 0 && waveBanner && (
+        <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none" style={{
+          opacity: waveBannerTimer > 2.5 ? (3 - waveBannerTimer) * 2 : waveBannerTimer > 0.5 ? 1 : waveBannerTimer * 2,
+        }}>
+          <div className="text-center">
+            <div className={`${isMobile ? 'text-3xl' : 'text-5xl'} font-black uppercase tracking-wider`} style={{
+              color: wave % 3 === 0 ? '#ef4444' : '#fde68a',
+              textShadow: wave % 3 === 0 ? '0 0 30px rgba(239,68,68,0.5)' : '0 0 30px rgba(253,230,138,0.4)',
+            }}>
+              {wave % 3 === 0 ? `⚠ ${(t as any).tutorial?.bossApproaching || 'BOSS APPROACHING!'}` : waveBanner}
+            </div>
+            {wave > 1 && wave % 3 !== 0 && (
+              <div className={`mt-2 ${isMobile ? 'text-sm' : 'text-lg'} text-orange-200/70 uppercase tracking-widest`}>
+                {(t as any).tutorial?.survivedWave || 'You survived Wave'} {wave - 1}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Objective Banner (persistent) ── */}
+      {gameElapsed < 90 && (
+        <div className={`absolute ${isMobile ? 'top-8' : 'top-4'} left-1/2 -translate-x-1/2 z-10 pointer-events-none`}>
+          <div className={`px-4 py-1.5 rounded-full ${isMobile ? 'text-[10px]' : 'text-xs'} font-bold uppercase tracking-widest`} style={{
+            background: 'rgba(0,0,0,0.5)',
+            border: '1px solid rgba(249,115,22,0.3)',
+            color: '#fdba74',
+          }}>
+            ⚔ {(t as any).tutorial?.objective || 'HOLD THE PASS — Survive'} {Math.floor(timeRemaining / 60)}:{String(Math.floor(timeRemaining % 60)).padStart(2, '0')}
+          </div>
+        </div>
+      )}
+
+      {/* ── Tutorial Prompts ── */}
+      {tutorialStep < 5 && gameElapsed < 30 && (
+        <div className={`absolute ${isMobile ? 'bottom-16' : 'bottom-20'} left-1/2 -translate-x-1/2 z-20 pointer-events-none`}>
+          <div className={`px-5 py-2.5 rounded-lg ${isMobile ? 'text-sm' : 'text-base'} font-bold text-center`} style={{
+            background: 'rgba(0,0,0,0.7)',
+            border: '1.5px solid rgba(249,115,22,0.4)',
+            color: '#fde68a',
+            boxShadow: '0 0 20px rgba(0,0,0,0.5)',
+            animation: 'combo-entrance 0.4s ease-out',
+          }}>
+            {tutorialStep === 0 && (isMobile ? ((t as any).tutorial?.moveMobile || 'Joystick to Move') : ((t as any).tutorial?.move || 'WASD to Move'))}
+            {tutorialStep === 1 && (isMobile ? ((t as any).tutorial?.lookMobile || 'Drag to Look') : ((t as any).tutorial?.look || 'Mouse to Look Around'))}
+            {tutorialStep === 2 && (isMobile ? ((t as any).tutorial?.attackMobile || 'Tap ATK') : ((t as any).tutorial?.attack || 'Click to Strike'))}
+            {tutorialStep === 3 && (isMobile ? ((t as any).tutorial?.blockMobile || 'Tap Block') : ((t as any).tutorial?.block || 'Right-Click to Block'))}
+            {tutorialStep === 4 && (isMobile ? ((t as any).tutorial?.dodgeMobile || 'Tap Dodge') : ((t as any).tutorial?.dodge || 'Space to Dodge'))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Stat Labels (first 20 seconds) ── */}
+      {gameElapsed < 20 && (
+        <div className="absolute z-5 pointer-events-none" style={{
+          top: isMobile ? '60px' : '120px',
+          left: isMobile ? '2px' : '6px',
+          paddingLeft: isMobile ? 'var(--sai-left)' : undefined,
+        }}>
+          <div className={`${isMobile ? 'text-[8px]' : 'text-[10px]'} text-orange-200/50 space-y-1`} style={{
+            opacity: Math.max(0, 1 - gameElapsed / 20),
+          }}>
+            <div>← {(t as any).tutorial?.healthLabel || 'Health'}</div>
+            <div>← {(t as any).tutorial?.staminaLabel || 'Stamina'}</div>
+            <div>← {(t as any).tutorial?.valorLabel || 'Valor'}</div>
+          </div>
+        </div>
       )}
     </>
   );

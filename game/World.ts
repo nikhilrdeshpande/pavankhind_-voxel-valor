@@ -63,26 +63,26 @@ export class World {
     this.scene = scene;
     this.isMobile = isMobile;
 
-    // --- Warm Sunset Sky ---
-    this.scene.background = new THREE.Color(0xd8b888);
+    // --- Sahyadri Monsoon Sky — misty grey-blue ---
+    this.scene.background = new THREE.Color(0xb8c8cc);
 
-    // Hemisphere: warm golden sky, green-tinted ground bounce
-    this.hemiLight = new THREE.HemisphereLight(0xfff2d8, 0x3a6a4a, 1.6);
+    // Hemisphere: cool overcast sky, deep green ground bounce
+    this.hemiLight = new THREE.HemisphereLight(0xe8eef0, 0x2a5a3a, 1.6);
     scene.add(this.hemiLight);
 
-    // Ambient fill to prevent dark areas
-    const ambientFill = new THREE.AmbientLight(0xffe8d0, 0.55);
+    // Ambient fill — neutral, not warm
+    const ambientFill = new THREE.AmbientLight(0xe0e8e0, 0.55);
     scene.add(ambientFill);
 
     const shadowRes = isMobile ? 1024 : 2048;
-    this.sunLight = new THREE.DirectionalLight(0xffe8c0, 2.5);
+    this.sunLight = new THREE.DirectionalLight(0xfff0d8, 2.0);
     this.sunLight.position.set(-120, 180, -200);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.set(shadowRes, shadowRes);
     scene.add(this.sunLight);
 
-    // Dynamic fog
-    this.fog = new THREE.FogExp2(0xd8b898, 0.0018);
+    // Dynamic fog — blue-grey Sahyadri mist
+    this.fog = new THREE.FogExp2(0xb0bcc0, 0.0018);
     scene.fog = this.fog;
 
     // Sky dome with sunset gradient: warm amber horizon → deep indigo zenith
@@ -92,10 +92,10 @@ export class World {
     for (let i = 0; i < posAttr.count; i++) {
       const y = posAttr.getY(i);
       const t = Math.max(0, Math.min(1, (y + 2000) / 4000)); // 0=bottom, 1=top
-      // Horizon (t~0.5): warm amber, Zenith (t~1): dusky blue-purple
-      const horizon = new THREE.Color(0xf8d090);
-      const zenith = new THREE.Color(0x6a78b0);
-      const bottom = new THREE.Color(0xb09070);
+      // Horizon: muted warm, Zenith: deep blue-grey, Bottom: grey-green
+      const horizon = new THREE.Color(0xd0c8b0);
+      const zenith = new THREE.Color(0x607898);
+      const bottom = new THREE.Color(0x8a9a8a);
       let c: THREE.Color;
       if (t < 0.45) {
         c = bottom.clone().lerp(horizon, t / 0.45);
@@ -137,7 +137,7 @@ export class World {
     // --- Sun Disc (emissive sphere near horizon) ---
     this.sunDisc = new THREE.Mesh(
       new THREE.SphereGeometry(60, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xffd080 })
+      new THREE.MeshBasicMaterial({ color: 0xffe0a0 })
     );
     this.sunDisc.position.set(-400, 80, -1800);
     scene.add(this.sunDisc);
@@ -163,8 +163,8 @@ export class World {
     const groundPos = groundGeo.attributes.position;
     const groundColors = new Float32Array(groundPos.count * 3);
     const trailColor = new THREE.Color(0x6b5a3a);   // dusty trail center
-    const grassColor = new THREE.Color(0x3a5a2a);   // moss/grass edges
-    const darkGrass = new THREE.Color(0x2a4a1a);    // deep edge
+    const grassColor = new THREE.Color(0x2a6a2a);   // monsoon green edges
+    const darkGrass = new THREE.Color(0x1a5a1a);    // deep lush green
 
     for (let i = 0; i < groundPos.count; i++) {
       const x = groundPos.getX(i);
@@ -218,7 +218,7 @@ export class World {
       new THREE.MeshStandardMaterial({ color: 0x6a3a22, roughness: 0.95, metalness: 0.05 }),
       new THREE.MeshStandardMaterial({ color: 0x5a3a2a, roughness: 0.95, metalness: 0.05 }),
     ];
-    const bushMat = new THREE.MeshStandardMaterial({ color: 0x2d5a1a, roughness: 0.9 });
+    const bushMat = new THREE.MeshStandardMaterial({ color: 0x1a6a18, roughness: 0.9 });
     const createCliff = (side: number) => {
       for (let z = -1800; z < 700; z += 130) {
         const width = 60 + Math.random() * 40;

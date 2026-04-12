@@ -303,20 +303,19 @@ const MobileControls: React.FC<MobileControlsProps> = ({
           <ActionButton label="Dodge" onPress={onDodge} size={42} />
         </div>
 
-        {/* Valor — above Block, only when rage >= 100 */}
-        {rage >= 100 && (
-          <div
-            className="absolute pointer-events-auto"
-            style={{
-              right: '80px',
-              top: '0px',
-              animation: 'valor-btn-pulse 1.5s ease-in-out infinite',
-              borderRadius: '50%',
-            }}
-          >
-            <ActionButton label="Valor" onPress={onValor} size={48} color="yellow" glow />
-          </div>
-        )}
+        {/* Valor — always visible, greyed when charging, gold when ready */}
+        <div
+          className="absolute pointer-events-auto"
+          style={{
+            right: '80px',
+            top: '0px',
+            opacity: rage >= 100 ? 1 : 0.35,
+            animation: rage >= 100 ? 'valor-btn-pulse 1.5s ease-in-out infinite' : 'none',
+            borderRadius: '50%',
+          }}
+        >
+          <ActionButton label={rage >= 100 ? 'Valor' : `${Math.round(rage)}%`} onPress={rage >= 100 ? onValor : () => {}} size={48} color={rage >= 100 ? 'yellow' : 'default'} glow={rage >= 100} />
+        </div>
       </div>
     </div>
   );

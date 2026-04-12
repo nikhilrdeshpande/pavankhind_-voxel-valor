@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import GameContainer from './components/GameContainer';
 import HUD from './components/HUD';
+import Minimap from './components/Minimap';
 import StartScreen from './components/StartScreen';
 import StoryScreen from './components/StoryScreen';
 import ModeSelectScreen from './components/ModeSelectScreen';
@@ -31,6 +32,8 @@ const defaultStats: GameStats = {
   maxCombo: 0, damageTaken: 0, valorStrikes: 0, wave: 1, weaponLevel: 1,
   perkReady: false, perkTimer: 60, archerWarning: 0,
   objectiveProgress: 0, objectiveTarget: 0, objectiveTimer: 0, objectivesCompleted: 0,
+  tutorialStep: 0, gameElapsed: 0, waveBanner: null, waveBannerTimer: 0,
+  dodgeCooldown: 0, enemyPositions: [], playerYaw: 0,
 };
 
 const perkOptions = [
@@ -417,6 +420,7 @@ const App: React.FC = () => {
       <AchievementToast achievements={newAchievements} lang={lang} />
 
       {isPlaying && <HUD stats={stats} t={t} isMobile={isMobile} onPause={() => setPaused(true)} />}
+      {isPlaying && gameActive && <Minimap stats={stats} isMobile={isMobile} />}
 
       {isPlaying && isMobile && gameActive && (
         <MobileControls

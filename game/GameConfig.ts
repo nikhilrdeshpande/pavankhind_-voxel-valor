@@ -30,6 +30,14 @@ export interface GameStats {
   objectiveTarget: number;
   objectiveTimer: number;
   objectivesCompleted: number;
+  // New fields for playability overhaul
+  tutorialStep: number;
+  gameElapsed: number;
+  waveBanner: string | null;
+  waveBannerTimer: number;
+  dodgeCooldown: number;
+  enemyPositions: { x: number; z: number; type: string }[];
+  playerYaw: number;
 }
 
 export const GAME_MODES: Record<string, GameConfig> = {

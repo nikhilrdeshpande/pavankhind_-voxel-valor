@@ -889,6 +889,9 @@ class Enemy {
     if (navigator.vibrate) navigator.vibrate(this.type === 'BOSS' ? [50, 20, 80] : 30);
   }
 
+  public getType() { return this.type; }
+  public isDead_() { return this.isDead; }
+
   public applyStagger(duration: number) {
     this.staggerTimer = duration;
   }
@@ -929,13 +932,17 @@ export class EnemyManager {
 
   public update(delta: number) {
     this.spawnTimer -= delta;
-    const maxEnemies = Math.min(14, 6 + Math.floor(this.difficulty * 0.7));
+    // Early game: fewer concurrent enemies, slower spawn
+    const isEarlyGame = this.gameElapsedTime < 30;
+    const maxEnemies = isEarlyGame
+      ? Math.min(6, 3 + Math.floor(this.difficulty * 0.5))
+      : Math.min(14, 6 + Math.floor(this.difficulty * 0.7));
 
-    // Initial burst: spawn 3 enemies immediately
+    // Initial spawn: just 1 enemy (not 3), give player time to learn
     if (!this.firstSpawnDone) {
       this.firstSpawnDone = true;
-      for (let i = 0; i < 3; i++) this.spawnEnemy();
-      this.spawnTimer = 1.0;
+      this.spawnEnemy();
+      this.spawnTimer = 4.0; // longer gap before second enemy
     }
 
     // Boss rush: spawn a boss every 30s
@@ -949,7 +956,10 @@ export class EnemyManager {
 
     if (this.spawnTimer <= 0 && this.enemies.length < maxEnemies) {
       this.spawnEnemy();
-      this.spawnTimer = Math.max(1.5, 3.0 - this.difficulty * 0.4);
+      // Slower spawns in early game
+      this.spawnTimer = isEarlyGame
+        ? Math.max(2.5, 4.0 - this.difficulty * 0.35)
+        : Math.max(1.5, 3.0 - this.difficulty * 0.4);
     }
 
     this.enemies = this.enemies.filter(e => {
@@ -1007,6 +1017,14 @@ export class EnemyManager {
   public getNearEnemyCount(pos: THREE.Vector3, radius: number): number {
     return this.enemies.filter(e => e.mesh.position.distanceTo(pos) < radius).length;
   }
+
+  public getEnemyPositions(): { x: number; z: number; type: string }[] {
+    return this.enemies
+      .filter(e => !e.isDead_())
+      .map(e => ({ x: e.mesh.position.x, z: e.mesh.position.z, type: e.getType() }));
+  }
+  private gameElapsedTime = 0;
+  public setGameElapsed(t: number) { this.gameElapsedTime = t; }
   public setArchersOnly(v: boolean) { this.archersOnly = v; }
   public setDoubleSpeed(v: boolean) { this.doubleSpeedMode = v; }
   public setBossRush(v: boolean) { this.bossRushMode = v; }
@@ -1192,17 +1210,29 @@ class Arrow {
   private velocity: THREE.Vector3;
   private life = 3.5;
 
+  private trail: THREE.Mesh;
+
   constructor(scene: THREE.Scene, player: Player, start: THREE.Vector3, target: THREE.Vector3) {
     this.scene = scene;
     this.player = player;
+    // Larger, red, emissive arrow — easy to see
     this.mesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.04, 0.04, 2.0, 6),
-      new THREE.MeshStandardMaterial({ color: 0x8a6b3f, roughness: 0.7 })
+      new THREE.CylinderGeometry(0.08, 0.08, 2.0, 6),
+      new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0xff2222, emissiveIntensity: 0.5, roughness: 0.5 })
     );
     this.mesh.rotation.z = Math.PI / 2;
     this.mesh.position.copy(start).add(new THREE.Vector3(0, 1.4, 0));
     const dir = target.clone().sub(start).normalize();
     this.velocity = dir.multiplyScalar(22);
+    // Red glowing trail behind arrow
+    this.trail = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 0.06, 3.0),
+      new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false })
+    );
+    this.trail.position.z = -1.5;
+    this.mesh.add(this.trail);
+    // Orient arrow toward target
+    this.mesh.lookAt(target);
     this.scene.add(this.mesh);
   }
 
