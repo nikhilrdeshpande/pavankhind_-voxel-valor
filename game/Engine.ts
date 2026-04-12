@@ -163,7 +163,7 @@ export class PavankhindEngine {
   private isMobile: boolean;
 
   // Dynamic FOV
-  private baseFOV = 75;
+  private baseFOV = 80;
   private targetFOV = 75;
   private currentFOV = 75;
 
@@ -667,7 +667,7 @@ export class PavankhindEngine {
 
     // When game is not active (menu screens), keep camera stable
     if (!this.isActive) {
-      this.camera.position.set(0, 4.5, 10);
+      this.camera.position.set(0, 3.5, 8);
       this.camera.rotation.order = 'YXZ';
       this.camera.rotation.set(-0.35, 0, 0);
     }

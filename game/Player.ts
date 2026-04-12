@@ -53,7 +53,7 @@ export class Player {
   private leftSwordPivot!: THREE.Group;
   private shieldGroup: THREE.Group | null = null;
   private hasShield = false;
-  private cameraOffset = new THREE.Vector3(0, 4.5, 10.0);
+  private cameraOffset = new THREE.Vector3(0, 3.5, 8.0);
   private cameraShake = 0;
   private damagePulse = 0;
   private minZ = -1300;
@@ -806,16 +806,19 @@ export class Player {
 
     const nextPos = this.mesh.position.clone().add(this.velocity.clone().multiplyScalar(delta));
     nextPos.x = Math.max(-19.5, Math.min(19.5, nextPos.x));
-    nextPos.y = 0.85; // Raise player so feet sit on ground surface
+    nextPos.y = Math.max(0.85, 0.85); // Feet on ground, safety clamp
     nextPos.z = Math.max(this.minZ, Math.min(this.maxZ, nextPos.z));
     this.mesh.position.copy(nextPos);
+    // Belt-and-suspenders: hard clamp after copy to prevent any frame skip escape
+    this.mesh.position.x = Math.max(-19.5, Math.min(19.5, this.mesh.position.x));
+    this.mesh.position.y = Math.max(0.85, this.mesh.position.y);
+    this.mesh.position.z = Math.max(this.minZ, Math.min(this.maxZ, this.mesh.position.z));
 
     if (this.input.isInputActive()) {
-        // Roblox-style sensitivity with smooth turning
-        const rawTurn = this.input.mouseDelta.x * 0.003;
+        // Industry standard: raw input with clamp, no smoothing
+        const rawTurn = this.input.mouseDelta.x * 0.002;
         const clampedTurn = Math.max(-0.15, Math.min(0.15, rawTurn));
-        const smoothedTurn = THREE.MathUtils.lerp(0, clampedTurn, 0.7);
-        this.mesh.rotation.y -= smoothedTurn;
+        this.mesh.rotation.y -= clampedTurn;
         // Normalize yaw to [-PI, PI] to prevent angle wraparound issues
         while (this.mesh.rotation.y > Math.PI) this.mesh.rotation.y -= Math.PI * 2;
         while (this.mesh.rotation.y < -Math.PI) this.mesh.rotation.y += Math.PI * 2;
@@ -935,7 +938,9 @@ export class Player {
     if (this.swingPhase === 'IDLE' && !this.isBlocking) {
         this.stamina = Math.min(100, this.stamina + 65 * this.staminaRegenMultiplier * delta);
     }
-    this.cameraShake = Math.max(0, this.cameraShake - delta * 5);
+    // Exponential decay — industry standard (Smash Bros / Hades style)
+    this.cameraShake *= Math.pow(0.05, delta);
+    if (this.cameraShake < 0.01) this.cameraShake = 0;
     if (this.comboTimer > 0) {
         this.comboTimer -= delta;
         if (this.comboTimer <= 0) this.comboCount = 0;
@@ -967,9 +972,9 @@ export class Player {
   }
 
   private updateCamera(delta: number) {
-    // Roblox-style third-person: elevated, angled down ~20°
-    const baseZ = 10.0;
-    const baseY = 4.5;
+    // Third-person: tighter to player for better character visibility
+    const baseZ = 8.0;
+    const baseY = 3.5;
 
     // Combo pull-back: wider view at high combos
     const comboZ = this.comboCount >= 5 ? 2.0 : 0;

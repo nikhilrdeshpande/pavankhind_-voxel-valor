@@ -116,11 +116,9 @@ const Minimap: React.FC<MinimapProps> = ({ stats, isMobile }) => {
       style={{
         width: size,
         height: size,
-        bottom: isMobile ? undefined : '80px',
+        bottom: isMobile ? '60px' : '80px',
+        right: isMobile ? '8px' : undefined,
         left: isMobile ? undefined : '16px',
-        top: isMobile ? '80px' : undefined,
-        right: isMobile ? undefined : undefined,
-        ...(isMobile ? { left: '8px' } : {}),
       }}
     >
       <canvas

@@ -12,7 +12,7 @@ export type MobileControlsProps = {
   rage: number;
 };
 
-const LOOK_SENSITIVITY = 2.0;
+const LOOK_SENSITIVITY = 1.0;
 
 const ActionButton: React.FC<{
   label: string;
