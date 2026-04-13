@@ -535,9 +535,10 @@ export class PavankhindEngine {
     if (this.tutorialStep === 3 && this.player.getBlockCount() > 0) this.tutorialStep = 4;
     if (this.tutorialStep === 4 && this.player.getDodgeCount() > 0) this.tutorialStep = 5;
 
-    // Wave transition banner
+    // Wave transition banner + wave-end healing
     if (this.wave > this.prevWave && this.prevWave > 0) {
       this.waveBannerTimer = 3.0;
+      this.player.restore(15, 30); // Heal 15 HP + 30 stamina between waves
     }
     this.prevWave = this.wave;
     if (this.waveBannerTimer > 0) this.waveBannerTimer -= delta;

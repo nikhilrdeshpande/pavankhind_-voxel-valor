@@ -30,6 +30,9 @@ export class Player {
   private blockingDisabled = false;
   private blockCount = 0;
   private dodgeCount = 0;
+  private damageCooldown = 0;
+  private usedValorSave = false;
+  private cameraYaw = 0; // separate camera yaw for camera-relative movement
 
   private velocity = new THREE.Vector3();
   private isBlocking = false;
@@ -758,7 +761,17 @@ export class Player {
     this.comboTimer = 2.0;
     this.maxCombo = Math.max(this.maxCombo, this.comboCount);
     this.rage = Math.min(100, this.rage + (isLethal ? 18 : 8) * this.valorGainMultiplier);
+
+    // Combo healing (Bloodborne rally system)
+    if (this.comboCount >= 9) {
+      this.health = Math.min(100, this.health + 5); // 5 HP at Mythic combo
+    } else if (this.comboCount >= 5) {
+      this.health = Math.min(100, this.health + 2); // 2 HP at Fury combo
+    }
+
+    // Kill healing
     if (isLethal) {
+      this.health = Math.min(100, this.health + 5); // +5 HP per kill
       this.slowmoTimer = 0.18;
     }
   }
@@ -774,15 +787,31 @@ export class Player {
     moveSpeed *= this.moveSpeedMultiplier;
     if (this.isBlocking) moveSpeed *= 0.4;
 
+    // Camera-relative movement (Genshin/Roblox pattern)
+    // Joystick/WASD moves relative to camera direction, not character direction
     const direction = new THREE.Vector3();
     if (this.input.keys['w']) direction.z -= 1;
     if (this.input.keys['s']) direction.z += 1;
     if (this.input.keys['a']) direction.x -= 1;
     if (this.input.keys['d']) direction.x += 1;
 
+    // Apply camera yaw to movement direction
+    const camYawQuat = new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(0, 1, 0), this.cameraYaw
+    );
+
     if (direction.length() > 0) {
-      direction.normalize().applyQuaternion(this.mesh.quaternion);
+      direction.normalize().applyQuaternion(camYawQuat);
       this.velocity.lerp(direction.multiplyScalar(moveSpeed), delta * 15);
+
+      // Auto-rotate character to face movement direction
+      const targetYaw = Math.atan2(this.velocity.x, this.velocity.z);
+      // Smooth turn toward movement direction
+      let yawDiff = targetYaw - this.mesh.rotation.y;
+      // Normalize to [-PI, PI]
+      while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
+      while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
+      this.mesh.rotation.y += yawDiff * Math.min(1, delta * 12);
     } else {
       this.velocity.lerp(new THREE.Vector3(0, 0, 0), delta * 20);
     }
@@ -794,8 +823,8 @@ export class Player {
       this.dodgeCooldown = 0.6;
       this.dodgeCount++;
       this.stamina -= 20;
-      this.dodgeDir = direction.length() > 0 ? direction.clone() : new THREE.Vector3(0, 0, -1).applyQuaternion(this.mesh.quaternion);
-      // Spawn afterimage
+      // Dodge in camera-relative direction
+      this.dodgeDir = direction.length() > 0 ? direction.clone() : new THREE.Vector3(0, 0, -1).applyQuaternion(camYawQuat);
       this.spawnAfterimage();
       this.audio.playDodgeWhoosh();
     }
@@ -815,13 +844,13 @@ export class Player {
     this.mesh.position.z = Math.max(this.minZ, Math.min(this.maxZ, this.mesh.position.z));
 
     if (this.input.isInputActive()) {
-        // Industry standard: raw input with clamp, no smoothing
+        // Mouse/touch controls camera yaw (not character — character auto-faces velocity)
         const rawTurn = this.input.mouseDelta.x * 0.002;
         const clampedTurn = Math.max(-0.15, Math.min(0.15, rawTurn));
-        this.mesh.rotation.y -= clampedTurn;
-        // Normalize yaw to [-PI, PI] to prevent angle wraparound issues
-        while (this.mesh.rotation.y > Math.PI) this.mesh.rotation.y -= Math.PI * 2;
-        while (this.mesh.rotation.y < -Math.PI) this.mesh.rotation.y += Math.PI * 2;
+        this.cameraYaw -= clampedTurn;
+        // Normalize to [-PI, PI]
+        while (this.cameraYaw > Math.PI) this.cameraYaw -= Math.PI * 2;
+        while (this.cameraYaw < -Math.PI) this.cameraYaw += Math.PI * 2;
         this.input.mouseDelta.set(0, 0);
     }
   }
@@ -935,6 +964,15 @@ export class Player {
   }
 
   private updateStats(delta: number) {
+    // Tick i-frame cooldown
+    this.damageCooldown = Math.max(0, this.damageCooldown - delta);
+    // i-frame flicker: toggle mesh visibility every 0.05s when invulnerable
+    if (this.damageCooldown > 0) {
+      this.mesh.visible = Math.floor(this.damageCooldown / 0.05) % 2 === 0;
+    } else {
+      this.mesh.visible = true;
+    }
+
     if (this.swingPhase === 'IDLE' && !this.isBlocking) {
         this.stamina = Math.min(100, this.stamina + 65 * this.staminaRegenMultiplier * delta);
     }
@@ -984,8 +1022,8 @@ export class Player {
     this.cameraOffset.z = THREE.MathUtils.lerp(this.cameraOffset.z, targetZ, delta * 5);
     this.cameraOffset.y = THREE.MathUtils.lerp(this.cameraOffset.y, baseY, delta * 5);
 
-    // Compute camera position using simple trig (avoid quaternion issues entirely)
-    const yaw = this.mesh.rotation.y;
+    // Camera follows cameraYaw (independent of character facing)
+    const yaw = this.cameraYaw;
     const sinY = Math.sin(yaw);
     const cosY = Math.cos(yaw);
     const offX = this.cameraOffset.x * cosY + this.cameraOffset.z * sinY;
@@ -1214,6 +1252,8 @@ export class Player {
   }
 
   public takeDamage(amount: number) {
+    // Post-hit invulnerability (i-frames) — prevents stunlock
+    if (this.damageCooldown > 0) return;
     if (this.parryTimer > 0) {
       this.parryTimer = 0;
       this.audio.playParrySuccess();
@@ -1252,6 +1292,21 @@ export class Player {
 
     // Haptic feedback on mobile — richer patterns
     if (navigator.vibrate) navigator.vibrate(this.isBlocking ? [10, 5, 10] : [30, 10, 50]);
+
+    // Post-hit invulnerability (0.4s i-frames)
+    this.damageCooldown = this.isBlocking ? 0.2 : 0.4;
+
+    // Valor Save: survive death once per game if rage >= 50
+    if (this.health <= 0 && this.rage >= 50 && !this.usedValorSave) {
+      this.health = 20;
+      this.rage = 0;
+      this.usedValorSave = true;
+      this.damageCooldown = 1.0; // 1 full second invulnerability
+      this.slowmoTimer = 0.5;
+      this.slowmoFactor = 0.2;
+      this.cameraShake = 1.5;
+      this.audio.playWarCry();
+    }
   }
 
   private spawnParryFlash() {
@@ -1311,7 +1366,7 @@ export class Player {
   public getBlockCount() { return this.blockCount; }
   public getDodgeCount() { return this.dodgeCount; }
   public getDodgeCooldown() { return this.dodgeCooldown; }
-  public getYaw() { return this.mesh.rotation.y; }
+  public getYaw() { return this.cameraYaw; }
   public applyPerk(id: string) {
     if (id === 'blade') {
       this.attackMultiplier = Math.min(1.6, this.attackMultiplier + 0.2);
