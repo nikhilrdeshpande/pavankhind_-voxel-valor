@@ -33,13 +33,14 @@ const defaultStats: GameStats = {
   perkReady: false, perkTimer: 60, archerWarning: 0,
   objectiveProgress: 0, objectiveTarget: 0, objectiveTimer: 0, objectivesCompleted: 0,
   tutorialStep: 0, gameElapsed: 0, waveBanner: null, waveBannerTimer: 0,
-  dodgeCooldown: 0, enemyPositions: [], playerYaw: 0,
+  dodgeCooldown: 0, enemyPositions: [], playerPosition: { x: 0, z: 0 }, playerYaw: 0,
+  waveProgress: 0, nextWaveIn: 30, stage: 1, stageProgress: 0,
 };
 
 const perkOptions = [
-  { id: 'blade', name: 'Blade of Bhavani', desc: '+20% damage' },
-  { id: 'spirit', name: 'Steel Spirit', desc: '+40% stamina regen + heal' },
-  { id: 'valor', name: 'War Cry', desc: '+30% Valor gain' },
+  { id: 'blade', name: 'Blade of Bhavani', desc: '+20% sword damage' },
+  { id: 'spirit', name: 'Steel Spirit', desc: '+40% stamina regen, +15 health, +35 stamina' },
+  { id: 'valor', name: 'War Cry', desc: '+30% Valor gained from hits and parries' },
 ];
 
 const portraitMap: Record<string, string> = {
@@ -379,7 +380,7 @@ const App: React.FC = () => {
   }, [stats.score]);
 
   const isPlaying = status === 'PLAYING';
-  const gameActive = isPlaying && !paused && !showControls && !showQuitConfirm && !showPerkChoice;
+  const gameActive = isPlaying && !paused && !showControls && !showQuitConfirm && !showPerkChoice && !showStore && !showBattlePass;
 
   return (
     <div className="relative w-full bg-black text-white overflow-hidden font-spectral game-root">
@@ -514,6 +515,7 @@ const App: React.FC = () => {
         onSelectPerk={selectPerk}
         onResume={() => setPaused(false)}
         onShowControls={() => { setPaused(true); setShowControls(true); }}
+        onOpenStore={() => { setPaused(true); setShowStore(true); }}
         onShowQuit={() => { setPaused(true); setShowQuitConfirm(true); }}
         onCloseControls={() => { setShowControls(false); if (isPlaying) setPaused(false); }}
         onQuit={() => window.location.reload()}
@@ -537,6 +539,7 @@ const App: React.FC = () => {
             setStatus('MODE_SELECT');
           }}
           onDoubleCoins={handleDoubleCoins}
+          onOpenStore={() => setShowStore(true)}
         />
       )}
     </div>

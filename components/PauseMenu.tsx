@@ -21,6 +21,7 @@ interface PauseMenuProps {
   onShowControls: () => void;
   onShowQuit: () => void;
   onCloseControls: () => void;
+  onOpenStore?: () => void;
   onQuit: () => void;
   onCancelQuit: () => void;
 }
@@ -28,7 +29,7 @@ interface PauseMenuProps {
 const PauseMenu: React.FC<PauseMenuProps> = ({
   t, paused, showPerkChoice, showControls, showQuitConfirm,
   perkOptions, isMobile, onSelectPerk, onResume, onShowControls, onShowQuit,
-  onCloseControls, onQuit, onCancelQuit,
+  onCloseControls, onOpenStore, onQuit, onCancelQuit,
 }) => {
   return (
     <>
@@ -78,6 +79,14 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
               >
                 {t.ui.controls}
               </button>
+              {onOpenStore && (
+                <button
+                  onClick={onOpenStore}
+                  className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-yellow-500/70 text-yellow-200 hover:bg-yellow-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs`}
+                >
+                  Coin Shop
+                </button>
+              )}
               <button
                 onClick={onShowQuit}
                 className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-red-500/70 text-red-200 hover:bg-red-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs`}

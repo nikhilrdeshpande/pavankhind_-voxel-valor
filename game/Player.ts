@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { InputManager } from './InputManager';
 import { AudioManager } from './AudioManager';
+import { createClothPanel, createMarathaDhal } from './ModelParts';
 
 export class Player {
   private mesh: THREE.Group;
@@ -33,6 +34,7 @@ export class Player {
   private damageCooldown = 0;
   private usedValorSave = false;
   private cameraYaw = 0; // separate camera yaw for camera-relative movement
+  private cameraPitch = -0.78;
 
   private velocity = new THREE.Vector3();
   private isBlocking = false;
@@ -56,11 +58,15 @@ export class Player {
   private leftSwordPivot!: THREE.Group;
   private shieldGroup: THREE.Group | null = null;
   private hasShield = false;
-  private cameraOffset = new THREE.Vector3(0, 3.5, 8.0);
+  private cameraOffset = new THREE.Vector3(0, 7.2, 8.8);
+  private cameraFocusTarget: THREE.Vector3 | null = null;
+  private cameraLookAhead = new THREE.Vector3();
+  private attackLungeTimer = 0;
   private cameraShake = 0;
   private damagePulse = 0;
   private minZ = -1300;
   private maxZ = 80;
+  private readonly groundY = 1.0;
 
   // Sword trail
   private trailMesh: THREE.Mesh;
@@ -130,6 +136,14 @@ export class Player {
     frontPanel.position.set(0.05, 1.1, 0.32);
     frontPanel.rotation.y = -0.1;
     this.mesh.add(frontPanel);
+
+    const angarkhaFoldMat = new THREE.MeshStandardMaterial({ color: 0xe7d8ba, roughness: 0.88 });
+    for (let i = 0; i < 3; i++) {
+      const fold = new THREE.Mesh(new THREE.BoxGeometry(0.035, 1.32 - i * 0.08, 0.018), angarkhaFoldMat);
+      fold.position.set(-0.25 + i * 0.18, 1.08, 0.335);
+      fold.rotation.z = -0.08 + i * 0.04;
+      this.mesh.add(fold);
+    }
 
     // Gold buttons along overlap
     for (let i = 0; i < 3; i++) {
@@ -222,6 +236,13 @@ export class Player {
     pagdiTop.position.set(-0.02, 2.48, -0.02);
     pagdiTop.rotation.y = -0.08;
     this.mesh.add(pagdiTop);
+    const pagdiHighlightMat = new THREE.MeshStandardMaterial({ color: 0xffa02b, roughness: 0.75 });
+    for (let i = 0; i < 3; i++) {
+      const wrap = new THREE.Mesh(new THREE.BoxGeometry(0.66 - i * 0.05, 0.045, 0.58 - i * 0.04), pagdiHighlightMat);
+      wrap.position.set(0.01 * i, 2.18 + i * 0.14, 0.01 * i);
+      wrap.rotation.y = 0.2 - i * 0.16;
+      this.mesh.add(wrap);
+    }
     // Trailing pagdi tail strip
     const pagdiTail = new THREE.Mesh(
       new THREE.BoxGeometry(0.12, 0.5, 0.06),
@@ -241,6 +262,22 @@ export class Player {
     shirastra.position.set(0, 2.3, 0.3);
     this.mesh.add(shirastra);
 
+    // Hero plume and tilak improve identity/readability from the angled camera.
+    const plume = new THREE.Mesh(
+      new THREE.ConeGeometry(0.08, 0.45, 6),
+      new THREE.MeshStandardMaterial({ color: 0xffd166, emissive: 0xff6a00, emissiveIntensity: 0.35, roughness: 0.55 })
+    );
+    plume.position.set(0.16, 2.65, 0.08);
+    plume.rotation.z = -0.35;
+    this.mesh.add(plume);
+
+    const tilak = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.18, 0.02),
+      new THREE.MeshStandardMaterial({ color: 0xff2f12, emissive: 0x7a1206, emissiveIntensity: 0.4 })
+    );
+    tilak.position.set(0, 1.98, 0.57);
+    this.mesh.add(tilak);
+
     // --- Shoulder Guards (Valkalam) ---
     const shoulderMat = new THREE.MeshStandardMaterial({ color: 0x8b6914, roughness: 0.6, metalness: 0.3 });
     const shoulderL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.12, 0.4), shoulderMat);
@@ -249,6 +286,17 @@ export class Player {
     const shoulderR = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.12, 0.4), shoulderMat);
     shoulderR.position.set(0.55, 1.85, 0);
     this.mesh.add(shoulderR);
+
+    // Wider pauldrons give Baji a stronger heroic silhouette.
+    const pauldronMat = new THREE.MeshStandardMaterial({ color: 0xb7791f, metalness: 0.45, roughness: 0.35 });
+    const pauldronL = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.16, 0.5), pauldronMat);
+    pauldronL.position.set(-0.66, 1.82, 0);
+    pauldronL.rotation.z = 0.08;
+    this.mesh.add(pauldronL);
+    const pauldronR = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.16, 0.5), pauldronMat);
+    pauldronR.position.set(0.66, 1.82, 0);
+    pauldronR.rotation.z = -0.08;
+    this.mesh.add(pauldronR);
 
     // --- Strap ---
     const strap = new THREE.Mesh(
@@ -266,6 +314,20 @@ export class Player {
     );
     sash.position.set(0, 0.55, 0.1);
     this.mesh.add(sash);
+
+    const waistPlate = new THREE.Mesh(
+      new THREE.BoxGeometry(1.0, 0.12, 0.08),
+      new THREE.MeshStandardMaterial({ color: 0xd4a017, metalness: 0.65, roughness: 0.35 })
+    );
+    waistPlate.position.set(0, 0.68, 0.42);
+    this.mesh.add(waistPlate);
+
+    const waistCordMat = new THREE.MeshStandardMaterial({ color: 0xf6c453, roughness: 0.45, metalness: 0.35 });
+    const waistCord = new THREE.Mesh(new THREE.TorusGeometry(0.48, 0.025, 5, 18), waistCordMat);
+    waistCord.position.set(0, 0.61, 0.08);
+    waistCord.scale.z = 0.42;
+    waistCord.rotation.x = Math.PI / 2;
+    this.mesh.add(waistCord);
 
     // --- Dagger Sheath ---
     const sheathMat = new THREE.MeshStandardMaterial({ color: 0x3a2a18, roughness: 0.8 });
@@ -299,14 +361,11 @@ export class Player {
     // --- Multi-segment Cape ---
     const capeMat = new THREE.MeshStandardMaterial({ color: 0x3f1d1d, roughness: 0.95 });
     for (let i = 0; i < 3; i++) {
-      const seg = new THREE.Mesh(
-        new THREE.BoxGeometry(0.85 - i * 0.05, 0.45, 0.08),
-        capeMat
-      );
+      const seg = createClothPanel(0.85 - i * 0.05, 0.45, 0x3f1d1d, i === 0 ? 0xd4a017 : undefined);
       seg.position.set(0.2, 1.55 - i * 0.4, -0.35 - i * 0.06);
       seg.rotation.y = -0.2;
       this.mesh.add(seg);
-      this.capeSegments.push(seg);
+      this.capeSegments.push(seg.children[0] as THREE.Mesh);
     }
     this.cape = this.capeSegments[0]; // keep reference for compatibility
 
@@ -363,7 +422,7 @@ export class Player {
     this.swordPivot.position.set(0, -0.9, -0.1);
     rArm.add(this.swordPivot);
     this.sword = new THREE.Mesh(
-      new THREE.BoxGeometry(0.15, 3.0, 0.05),
+      new THREE.BoxGeometry(0.13, 3.15, 0.045),
       new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 1.0, roughness: 0.15 })
     );
     this.sword.position.y = 1.8;
@@ -375,6 +434,13 @@ export class Player {
     );
     bladeEdge.position.set(0.08, 1.8, 0);
     this.swordPivot.add(bladeEdge);
+    const bladeTip = new THREE.Mesh(
+      new THREE.ConeGeometry(0.085, 0.28, 4),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1.0, roughness: 0.1 })
+    );
+    bladeTip.position.y = 3.42;
+    bladeTip.rotation.z = Math.PI / 4;
+    this.swordPivot.add(bladeTip);
     // Cross-guard
     const crossGuardR = new THREE.Mesh(
       new THREE.BoxGeometry(0.4, 0.08, 0.08),
@@ -438,6 +504,8 @@ export class Player {
 
     this.leftArm.position.set(-0.65, 1.7, 0);
     this.mesh.add(this.leftArm);
+
+    this.mesh.position.y = this.groundY;
 
     // --- Sword Trail ---
     this.trailMesh = this.createSwordTrail();
@@ -508,7 +576,7 @@ export class Player {
     this.sword.localToWorld(tipWorld);
     this.sword.localToWorld(baseWorld);
 
-    if (this.swingPhase === 'STRIKE' && this.swingHitEnemy) {
+    if (this.swingPhase === 'STRIKE') {
       this.trailPositions.unshift(tipWorld.clone(), baseWorld.clone());
       if (this.trailPositions.length > this.trailMaxFrames * 2) {
         this.trailPositions.length = this.trailMaxFrames * 2;
@@ -597,39 +665,7 @@ export class Player {
     this.shieldGroup = new THREE.Group();
     this.shieldGroup.position.set(0, -0.5, -0.3);
     this.shieldGroup.rotation.x = -0.3;
-
-    // Shield face — circular dhal (traditional Maratha round shield)
-    const faceMat = new THREE.MeshStandardMaterial({ color: faceColor, roughness: 0.6, metalness: 0.3 });
-    const face = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.06, 12), faceMat);
-    face.rotation.x = Math.PI / 2;
-    this.shieldGroup.add(face);
-
-    // Shield rim — golden ring
-    const rimMat = new THREE.MeshStandardMaterial({ color: rimColor, roughness: 0.3, metalness: 0.7 });
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.04, 8, 16), rimMat);
-    rim.rotation.x = Math.PI / 2;
-    this.shieldGroup.add(rim);
-
-    // Center boss (umbo)
-    const bossMat = new THREE.MeshStandardMaterial({ color: rimColor, roughness: 0.3, metalness: 0.8, emissive: emblemColor, emissiveIntensity: 0.2 });
-    const boss = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), bossMat);
-    boss.position.z = 0.04;
-    this.shieldGroup.add(boss);
-
-    // Decorative studs (4 around center)
-    const studMat = new THREE.MeshStandardMaterial({ color: emblemColor, metalness: 0.6, roughness: 0.4 });
-    for (let i = 0; i < 4; i++) {
-      const angle = (i / 4) * Math.PI * 2;
-      const stud = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), studMat);
-      stud.position.set(Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, 0.04);
-      this.shieldGroup.add(stud);
-    }
-
-    // Grip handle on back
-    const gripMat = new THREE.MeshStandardMaterial({ color: 0x3a2a18, roughness: 0.9 });
-    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), gripMat);
-    grip.position.z = -0.05;
-    this.shieldGroup.add(grip);
+    this.shieldGroup.add(createMarathaDhal(faceColor, rimColor, emblemColor, 1.04));
 
     this.leftArm.add(this.shieldGroup);
   }
@@ -783,7 +819,7 @@ export class Player {
       this.mesh.rotation.z = 0;
     }
 
-    let moveSpeed = (this.stamina < 15 ? 4 : 16);
+    let moveSpeed = (this.stamina < 15 ? 4 : 14);
     moveSpeed *= this.moveSpeedMultiplier;
     if (this.isBlocking) moveSpeed *= 0.4;
 
@@ -826,6 +862,7 @@ export class Player {
       // Dodge in camera-relative direction
       this.dodgeDir = direction.length() > 0 ? direction.clone() : new THREE.Vector3(0, 0, -1).applyQuaternion(camYawQuat);
       this.spawnAfterimage();
+      this.spawnDodgeBurst();
       this.audio.playDodgeWhoosh();
     }
 
@@ -835,19 +872,21 @@ export class Player {
 
     const nextPos = this.mesh.position.clone().add(this.velocity.clone().multiplyScalar(delta));
     nextPos.x = Math.max(-19.5, Math.min(19.5, nextPos.x));
-    nextPos.y = Math.max(0.85, 0.85); // Feet on ground, safety clamp
+    nextPos.y = this.groundY;
     nextPos.z = Math.max(this.minZ, Math.min(this.maxZ, nextPos.z));
     this.mesh.position.copy(nextPos);
     // Belt-and-suspenders: hard clamp after copy to prevent any frame skip escape
     this.mesh.position.x = Math.max(-19.5, Math.min(19.5, this.mesh.position.x));
-    this.mesh.position.y = Math.max(0.85, this.mesh.position.y);
+    this.mesh.position.y = this.groundY;
     this.mesh.position.z = Math.max(this.minZ, Math.min(this.maxZ, this.mesh.position.z));
 
     if (this.input.isInputActive()) {
         // Mouse/touch controls camera yaw (not character — character auto-faces velocity)
-        const rawTurn = this.input.mouseDelta.x * 0.002;
-        const clampedTurn = Math.max(-0.15, Math.min(0.15, rawTurn));
+        const rawTurn = this.input.mouseDelta.x * 0.00135;
+        const clampedTurn = Math.max(-0.08, Math.min(0.08, rawTurn));
         this.cameraYaw -= clampedTurn;
+        const rawPitch = this.input.mouseDelta.y * 0.0011;
+        this.cameraPitch = THREE.MathUtils.clamp(this.cameraPitch - rawPitch, -1.12, -0.52);
         // Normalize to [-PI, PI]
         while (this.cameraYaw > Math.PI) this.cameraYaw -= Math.PI * 2;
         while (this.cameraYaw < -Math.PI) this.cameraYaw += Math.PI * 2;
@@ -916,12 +955,15 @@ export class Player {
       this.swingTimer = 0;
       this.swingSide *= -1;
       this.swingHitEnemy = false;
+      this.attackLungeTimer = 0.14;
+      this.faceCombatTarget(delta, 1);
       this.stamina -= 12;
       this.audio.playBreath(0.6);
     }
 
     if (this.swingPhase !== 'IDLE') {
       this.swingTimer += delta * comboMod;
+      this.faceCombatTarget(delta, this.swingPhase === 'STRIKE' ? 1.15 : 0.65);
       if (this.swingPhase === 'WINDUP') {
         rArm.rotation.x = THREE.MathUtils.lerp(rArm.rotation.x, Math.PI / 2.2, delta * 30 * comboMod);
         rArm.rotation.z = THREE.MathUtils.lerp(rArm.rotation.z, this.swingSide * 0.8, delta * 25 * comboMod);
@@ -929,6 +971,7 @@ export class Player {
       } else if (this.swingPhase === 'STRIKE') {
         rArm.rotation.x = THREE.MathUtils.lerp(rArm.rotation.x, -Math.PI / 1.2, delta * 65 * comboMod);
         rArm.rotation.z = THREE.MathUtils.lerp(rArm.rotation.z, -this.swingSide * 0.5, delta * 45 * comboMod);
+        this.applyAttackLunge(delta);
         if (this.swingTimer > 0.09) { this.swingPhase = 'RECOVERY'; this.swingTimer = 0; }
       } else if (this.swingPhase === 'RECOVERY') {
         rArm.rotation.x = THREE.MathUtils.lerp(rArm.rotation.x, 0, delta * 25 * comboMod);
@@ -961,6 +1004,31 @@ export class Player {
         this.leftArm.rotation.y = THREE.MathUtils.lerp(this.leftArm.rotation.y, 0, delta * 15);
         this.leftArm.rotation.x = THREE.MathUtils.lerp(this.leftArm.rotation.x, 0, delta * 15);
     }
+  }
+
+  private faceCombatTarget(delta: number, strength: number) {
+    if (!this.cameraFocusTarget) return;
+    const toTarget = this.cameraFocusTarget.clone().sub(this.mesh.position);
+    toTarget.y = 0;
+    if (toTarget.lengthSq() < 0.01 || toTarget.lengthSq() > 36 * 36) return;
+    const targetYaw = Math.atan2(toTarget.x, toTarget.z);
+    let yawDiff = targetYaw - this.mesh.rotation.y;
+    while (yawDiff > Math.PI) yawDiff -= Math.PI * 2;
+    while (yawDiff < -Math.PI) yawDiff += Math.PI * 2;
+    this.mesh.rotation.y += yawDiff * Math.min(1, delta * 14 * strength);
+  }
+
+  private applyAttackLunge(delta: number) {
+    if (this.attackLungeTimer <= 0 || !this.cameraFocusTarget) return;
+    this.attackLungeTimer = Math.max(0, this.attackLungeTimer - delta);
+    const toTarget = this.cameraFocusTarget.clone().sub(this.mesh.position);
+    toTarget.y = 0;
+    const dist = toTarget.length();
+    if (dist < 1.8 || dist > 7.0) return;
+    toTarget.normalize();
+    this.mesh.position.addScaledVector(toTarget, delta * 8.5);
+    this.mesh.position.x = Math.max(-19.5, Math.min(19.5, this.mesh.position.x));
+    this.mesh.position.z = Math.max(this.minZ, Math.min(this.maxZ, this.mesh.position.z));
   }
 
   private updateStats(delta: number) {
@@ -1010,9 +1078,9 @@ export class Player {
   }
 
   private updateCamera(delta: number) {
-    // Third-person: tighter to player for better character visibility
-    const baseZ = 8.0;
-    const baseY = 3.5;
+    // High angled third-person view: readable like an action dungeon camera, while still showing Baji's model.
+    const baseZ = 8.8;
+    const baseY = 7.2;
 
     // Combo pull-back: wider view at high combos
     const comboZ = this.comboCount >= 5 ? 2.0 : 0;
@@ -1035,6 +1103,21 @@ export class Player {
       this.mesh.position.z + offZ
     );
 
+    const velocityAhead = this.velocity.clone();
+    if (velocityAhead.lengthSq() > 1) {
+      velocityAhead.normalize().multiplyScalar(1.4);
+    }
+    const focusAhead = new THREE.Vector3();
+    if (this.cameraFocusTarget) {
+      focusAhead.copy(this.cameraFocusTarget).sub(this.mesh.position);
+      focusAhead.y = 0;
+      if (focusAhead.lengthSq() > 0.01) {
+        focusAhead.normalize().multiplyScalar(1.8);
+      }
+    }
+    this.cameraLookAhead.lerp(velocityAhead.add(focusAhead), 1 - Math.pow(0.02, delta));
+    targetPos.add(this.cameraLookAhead);
+
     if (this.cameraShake > 0) {
       targetPos.x += (Math.random() - 0.5) * this.cameraShake;
       targetPos.y += (Math.random() - 0.5) * this.cameraShake;
@@ -1046,7 +1129,7 @@ export class Player {
     // Set camera rotation directly — avoid lookAt() which can flip at certain angles
     this.camera.rotation.order = 'YXZ';
     this.camera.rotation.y = yaw; // Same direction as player
-    this.camera.rotation.x = -0.35; // 20° down pitch — see ground + incoming enemies
+    this.camera.rotation.x = this.cameraPitch; // mouse Y shifts from top tactical angle toward lower shoulder view
     this.camera.rotation.z = 0; // Never roll
   }
 
@@ -1336,10 +1419,51 @@ export class Player {
     requestAnimationFrame(animate);
   }
 
+  private spawnDodgeBurst() {
+    const ringGeo = new THREE.RingGeometry(0.5, 1.8, 24);
+    ringGeo.rotateX(-Math.PI / 2);
+    const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
+      color: 0x66ccff,
+      transparent: true,
+      opacity: 0.55,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }));
+    ring.position.copy(this.mesh.position);
+    ring.position.y = 0.08;
+    this.scene.add(ring);
+
+    let life = 0.28;
+    const animate = () => {
+      life -= 0.016;
+      const t = Math.max(0, life / 0.28);
+      ring.scale.setScalar(1 + (1 - t) * 1.8);
+      (ring.material as THREE.MeshBasicMaterial).opacity = t * 0.55;
+      if (life > 0) {
+        requestAnimationFrame(animate);
+      } else {
+        this.scene.remove(ring);
+      }
+    };
+    requestAnimationFrame(animate);
+  }
+
   public restore(h: number, s: number) {
     this.health = Math.min(100, this.health + h);
     this.stamina = Math.min(100, this.stamina + s);
     this.damagePulse = 1.0;
+  }
+
+  public gainValor(amount: number) {
+    this.rage = Math.min(100, this.rage + amount);
+    this.damagePulse = 0.65;
+  }
+
+  public refreshDodge() {
+    this.dodgeCooldown = 0;
+    this.stamina = Math.min(100, this.stamina + 35);
+    this.spawnDodgeBurst();
   }
 
   public tickSlowmo(realDelta: number) {
@@ -1353,6 +1477,20 @@ export class Player {
   public getStamina() { return this.stamina; }
   public isPlayerAttacking() { return this.swingPhase === 'STRIKE'; }
   public isPlayerBlocking() { return this.isBlocking; }
+  public deflectProjectile(from: THREE.Vector3): boolean {
+    if (!this.isBlocking || this.stamina < 4) return false;
+    const toProjectile = from.clone().sub(this.mesh.position);
+    toProjectile.y = 0;
+    if (toProjectile.lengthSq() < 0.01) return false;
+    const forward = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.mesh.rotation.y);
+    if (forward.dot(toProjectile.normalize()) < 0.15) return false;
+    this.stamina = Math.max(0, this.stamina - 6);
+    this.rage = Math.min(100, this.rage + 6);
+    this.cameraShake = 0.35;
+    this.spawnParryFlash();
+    this.audio.playSwordClash();
+    return true;
+  }
   public getAttackPower() { return 120 * (1 + (this.weaponLevel - 1) * 0.15) * this.attackMultiplier; }
   public getComboCount() { return this.comboCount; }
   public getRage() { return this.rage; }
@@ -1367,6 +1505,9 @@ export class Player {
   public getDodgeCount() { return this.dodgeCount; }
   public getDodgeCooldown() { return this.dodgeCooldown; }
   public getYaw() { return this.cameraYaw; }
+  public setCameraFocus(target: THREE.Vector3 | null) {
+    this.cameraFocusTarget = target ? target.clone() : null;
+  }
   public applyPerk(id: string) {
     if (id === 'blade') {
       this.attackMultiplier = Math.min(1.6, this.attackMultiplier + 0.2);

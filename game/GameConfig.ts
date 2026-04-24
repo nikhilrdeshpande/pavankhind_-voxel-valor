@@ -37,7 +37,18 @@ export interface GameStats {
   waveBannerTimer: number;
   dodgeCooldown: number;
   enemyPositions: { x: number; z: number; type: string }[];
+  playerPosition: { x: number; z: number };
   playerYaw: number;
+  waveProgress: number;
+  nextWaveIn: number;
+  stage: number;
+  stageProgress: number;
+  recentPickup: {
+    name: string;
+    effect: string;
+    color: string;
+  } | null;
+  pickupToastTimer: number;
 }
 
 export const GAME_MODES: Record<string, GameConfig> = {

@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { Player } from './Player';
 import { AudioManager } from './AudioManager';
+import { createClothPanel, createMarathaDhal } from './ModelParts';
 
 type EnemyType = 'STANDARD' | 'RUSHER' | 'SHIELDER' | 'ARCHER' | 'BRUTE' | 'BOSS';
 
@@ -49,6 +50,8 @@ class Enemy {
   private bossEyeLeft: THREE.Mesh | null = null;
   private bossEyeRight: THREE.Mesh | null = null;
   private bossEyeLight: THREE.PointLight | null = null;
+  private aimLine: THREE.Mesh | null = null;
+  private recoilVelocity = new THREE.Vector3();
 
   // Walk animation refs
   private legL!: THREE.Mesh;
@@ -157,6 +160,10 @@ class Enemy {
       hood.position.set(0, 2.05, -0.15);
       hood.rotation.x = 0.2;
       this.mesh.add(hood);
+      const scarf = createClothPanel(0.5, 0.55, 0x224a22, 0xd6a84a);
+      scarf.position.set(0, 1.55, 0.34);
+      scarf.rotation.x = -0.12;
+      this.mesh.add(scarf);
     }
 
     // --- Headgear (Sultanate turban or pointed helmet) ---
@@ -168,6 +175,13 @@ class Enemy {
       );
       helmet.position.y = 2.2;
       this.mesh.add(helmet);
+      const runnerSash = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 1.6, 0.08),
+        new THREE.MeshStandardMaterial({ color: 0xff3b1f, emissive: 0x661000, emissiveIntensity: 0.25, roughness: 0.7 })
+      );
+      runnerSash.position.set(0.22, 1.05, 0.32);
+      runnerSash.rotation.z = 0.45;
+      this.mesh.add(runnerSash);
     } else {
       // Flat-topped Sultanate turban
       const turbanColor = this.type === 'BOSS' ? 0x1a3a1a : 0x1a2a1a;
@@ -240,6 +254,19 @@ class Enemy {
       bow.rotation.z = Math.PI / 2;
       bow.position.y = 0.2;
       this.weaponPivot.add(bow);
+      const string = new THREE.Mesh(
+        new THREE.BoxGeometry(0.025, 1.08, 0.025),
+        new THREE.MeshBasicMaterial({ color: 0xf7e7b2 })
+      );
+      string.position.set(0.36, 0.2, 0);
+      this.weaponPivot.add(string);
+      const nockedArrow = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.025, 0.025, 1.2, 5),
+        new THREE.MeshStandardMaterial({ color: 0xf2d28a, emissive: 0x442200, emissiveIntensity: 0.25 })
+      );
+      nockedArrow.rotation.x = Math.PI / 2;
+      nockedArrow.position.set(0.32, 0.2, 0.25);
+      this.weaponPivot.add(nockedArrow);
     } else {
       const swordColor = this.type === 'BRUTE' ? 0x444444 : 0xaaaaaa;
       const swordLen = this.type === 'BRUTE' || this.type === 'BOSS' ? 3.6 : 2.5;
@@ -288,34 +315,27 @@ class Enemy {
       );
       quiver.position.set(0, 1.3, -0.35);
       this.mesh.add(quiver);
+      const arrowBundleMat = new THREE.MeshStandardMaterial({ color: 0xd8b56a, emissive: 0x553300, emissiveIntensity: 0.25, roughness: 0.6 });
+      for (let a = 0; a < 3; a++) {
+        const arrow = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.9, 4), arrowBundleMat);
+        arrow.position.set(-0.06 + a * 0.06, 1.55, -0.45);
+        arrow.rotation.x = 0.35;
+        this.mesh.add(arrow);
+      }
     }
 
     if (this.type === 'SHIELDER') {
       // Larger, more prominent shield with emblem
-      const shield = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.9, 0.9, 0.12, 14),
-        new THREE.MeshStandardMaterial({ color: 0x3a2a1a, metalness: 0.6, roughness: 0.4, emissive: 0x3a2a1a, emissiveIntensity: 0.15 })
-      );
-      shield.rotation.x = Math.PI / 2;
+      const shield = createMarathaDhal(0x302418, 0x8a6b3f, 0x2f6fff, 1.2);
       shield.position.set(-0.55, 1.2, 0.4);
+      shield.rotation.y = 0.08;
       this.mesh.add(shield);
-      // Shield boss/emblem
-      const emblem = new THREE.Mesh(
-        new THREE.BoxGeometry(0.2, 0.2, 0.02),
-        new THREE.MeshStandardMaterial({ color: 0xaa8800, metalness: 0.7, roughness: 0.3 })
+      const helmetCrest = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 0.35, 0.08),
+        new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x082a66, emissiveIntensity: 0.25 })
       );
-      emblem.position.set(-0.55, 1.2, 0.48);
-      this.mesh.add(emblem);
-      // Crescent emblem on shield
-      const crescentMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
-      const crescentBar1 = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.35, 0.02), crescentMat);
-      crescentBar1.position.set(-0.55, 1.2, 0.5);
-      crescentBar1.rotation.z = 0.3;
-      this.mesh.add(crescentBar1);
-      const crescentBar2 = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.35, 0.02), crescentMat);
-      crescentBar2.position.set(-0.55, 1.2, 0.5);
-      crescentBar2.rotation.z = -0.3;
-      this.mesh.add(crescentBar2);
+      helmetCrest.position.set(0, 2.48, 0);
+      this.mesh.add(helmetCrest);
     }
 
     if (this.type === 'BRUTE') {
@@ -347,6 +367,20 @@ class Enemy {
       chain.position.set(0.15, 1.3, 0.15);
       chain.rotation.z = 0.5;
       this.mesh.add(chain);
+      const backSpikeMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.6, roughness: 0.35 });
+      for (let s = 0; s < 3; s++) {
+        const spike = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.45, 5), backSpikeMat);
+        spike.position.set((s - 1) * 0.28, 1.78, -0.34);
+        spike.rotation.x = -Math.PI / 2;
+        this.mesh.add(spike);
+      }
+      const maceBandMat = new THREE.MeshStandardMaterial({ color: 0x8a6b3f, metalness: 0.7, roughness: 0.3 });
+      for (let b = 0; b < 2; b++) {
+        const band = new THREE.Mesh(new THREE.TorusGeometry(0.28 + b * 0.08, 0.025, 5, 10), maceBandMat);
+        band.position.y = 2.6;
+        band.rotation.x = Math.PI / 2;
+        this.weaponPivot.add(band);
+      }
     }
 
     // --- Health Bar ---
@@ -386,10 +420,7 @@ class Enemy {
       this.bossEyeRight = bossEyeR;
 
       // Boss cape
-      const cape = new THREE.Mesh(
-        new THREE.BoxGeometry(0.8, 1.5, 0.08),
-        new THREE.MeshStandardMaterial({ color: 0x3a0a0a, roughness: 0.9 })
-      );
+      const cape = createClothPanel(1.05, 1.7, 0x3a0a0a, 0xaa6600);
       cape.position.set(0, 1.0, -0.4);
       this.mesh.add(cape);
 
@@ -454,7 +485,29 @@ class Enemy {
     this.dangerRing.visible = false;
     this.mesh.add(this.dangerRing);
 
+    if (this.type === 'ARCHER') {
+      this.aimLine = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, 0.08, 1),
+        new THREE.MeshBasicMaterial({
+          color: 0xff2f1f,
+          transparent: true,
+          opacity: 0.5,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        })
+      );
+      this.aimLine.visible = false;
+      this.scene.add(this.aimLine);
+    }
+
     this.mesh.position.copy(startPos);
+    const shadowBlob = new THREE.Mesh(
+      new THREE.CircleGeometry(this.type === 'BOSS' ? 1.6 : this.type === 'BRUTE' ? 1.1 : 0.75, 16),
+      new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false })
+    );
+    shadowBlob.rotation.x = -Math.PI / 2;
+    shadowBlob.position.y = 0.025;
+    this.mesh.add(shadowBlob);
     this.lastPos.copy(startPos);
     scene.add(this.mesh);
   }
@@ -470,10 +523,19 @@ class Enemy {
       this.mesh.position.y -= delta * 2;
       if (this.deathTimer <= 0) {
         this.scene.remove(this.mesh);
+        if (this.aimLine) this.scene.remove(this.aimLine);
       }
       return;
     }
     if (this.isDead) return;
+
+    if (this.recoilVelocity.lengthSq() > 0.01) {
+      this.mesh.position.addScaledVector(this.recoilVelocity, delta);
+      this.recoilVelocity.multiplyScalar(Math.pow(0.04, delta));
+      this.applyBlockerCollision();
+    } else {
+      this.recoilVelocity.set(0, 0, 0);
+    }
 
     // Stagger: skip AI while staggered
     if (this.staggerTimer > 0) {
@@ -536,7 +598,7 @@ class Enemy {
             this.rangedWindup = Math.max(0, this.rangedWindup - delta);
             if (prev > 0 && this.rangedWindup <= 0) {
               this.audio.playBowTwang();
-              EnemyManager.spawnArrow(this.scene, this.player, this.mesh.position.clone(), pPos.clone());
+              EnemyManager.spawnArrow(this.scene, this.player, this.getProjectileOrigin(), pPos.clone());
             }
           }
         } else if (dist < 20.0) {
@@ -546,7 +608,7 @@ class Enemy {
             this.rangedWindup = Math.max(0, this.rangedWindup - delta);
             if (prev > 0 && this.rangedWindup <= 0) {
               this.audio.playBowTwang();
-              EnemyManager.spawnArrow(this.scene, this.player, this.mesh.position.clone(), pPos.clone());
+              EnemyManager.spawnArrow(this.scene, this.player, this.getProjectileOrigin(), pPos.clone());
             }
           } else if (this.rangedCooldown <= 0) {
             this.rangedCooldown = 2.2;
@@ -615,6 +677,9 @@ class Enemy {
             this.weaponPivot.rotation.x = THREE.MathUtils.lerp(this.weaponPivot.rotation.x, -2, delta * 10);
         }
     }
+
+    this.applyBlockerCollision();
+    this.updateArcherAimTell(pPos);
 
     this.lookTarget.position.copy(this.mesh.position);
     this.lookTarget.lookAt(pPos);
@@ -797,6 +862,13 @@ class Enemy {
     if (this.hitFlash > 0.15) return;
     this.health -= amount;
     this.hitFlash = 1.5;
+    const away = this.mesh.position.clone().sub(this.player.getPosition());
+    away.y = 0;
+    if (away.lengthSq() > 0.01) {
+      const massFactor = this.type === 'BOSS' ? 0.35 : this.type === 'BRUTE' ? 0.55 : 1;
+      this.recoilVelocity.add(away.normalize().multiplyScalar((this.type === 'RUSHER' ? 6 : 4.5) * massFactor));
+    }
+    this.applyStagger(this.type === 'BOSS' ? 0.08 : this.type === 'BRUTE' ? 0.12 : 0.18);
     const isLethal = this.health <= 0;
     if (isLethal) {
       this.audio.playKill();
@@ -812,6 +884,10 @@ class Enemy {
     this.isDead = true;
     this.strikePending = false;
     this.dangerRing.visible = false;
+    if (this.aimLine) {
+      this.scene.remove(this.aimLine);
+      this.aimLine = null;
+    }
     this.onKilled();
     this.deathTimer = 0.35;
 
@@ -896,7 +972,45 @@ class Enemy {
     this.staggerTimer = duration;
   }
 
+  private updateArcherAimTell(playerPos: THREE.Vector3) {
+    if (!this.aimLine) return;
+    const active = this.type === 'ARCHER' && this.rangedWindup > 0 && !this.isDead;
+    this.aimLine.visible = active;
+    if (!active) return;
+
+    const start = this.getProjectileOrigin();
+    const end = playerPos.clone().add(new THREE.Vector3(0, 1.05, 0));
+    const mid = start.clone().lerp(end, 0.5);
+    const length = start.distanceTo(end);
+    this.aimLine.position.copy(mid);
+    this.aimLine.scale.set(1, 1, length);
+    this.aimLine.lookAt(end);
+    const mat = this.aimLine.material as THREE.MeshBasicMaterial;
+    mat.opacity = 0.25 + (1 - this.rangedWindup / 0.45) * 0.45;
+  }
+
   public isActive() { return !this.isDead || this.deathTimer > 0; }
+
+  private getProjectileOrigin(): THREE.Vector3 {
+    const origin = new THREE.Vector3(0, 0.35, 0.35);
+    this.weaponPivot.localToWorld(origin);
+    return origin;
+  }
+
+  private applyBlockerCollision() {
+    for (const blocker of EnemyManager.getArrowBlockers()) {
+      const dx = this.mesh.position.x - blocker.x;
+      const dz = this.mesh.position.z - blocker.z;
+      const minRadius = blocker.radius + (this.type === 'BOSS' ? 1.5 : this.type === 'BRUTE' ? 1.1 : 0.75);
+      const distSq = dx * dx + dz * dz;
+      if (distSq <= 0.0001 || distSq >= minRadius * minRadius) continue;
+      const dist = Math.sqrt(distSq);
+      const push = (minRadius - dist) + 0.04;
+      this.mesh.position.x += (dx / dist) * push;
+      this.mesh.position.z += (dz / dist) * push;
+    }
+    this.mesh.position.x = Math.max(-19.5, Math.min(19.5, this.mesh.position.x));
+  }
 }
 
 export class EnemyManager {
@@ -912,6 +1026,7 @@ export class EnemyManager {
   private valorColumns: ValorColumn[] = [];
   private valorShockwaves: ValorShockwave[] = [];
   private static arrows: Arrow[] = [];
+  private static arrowBlockers: { x: number; z: number; radius: number }[] = [];
   private bossActive = false;
   private archerWarningTimer = 0;
   private damageNumbers: DamageNumber[] = [];
@@ -932,17 +1047,17 @@ export class EnemyManager {
 
   public update(delta: number) {
     this.spawnTimer -= delta;
-    // Early game: fewer concurrent enemies, slower spawn
+    // Early game: fewer concurrent enemies, slower spawn, fewer ranged threats.
     const isEarlyGame = this.gameElapsedTime < 30;
     const maxEnemies = isEarlyGame
-      ? Math.min(6, 3 + Math.floor(this.difficulty * 0.5))
-      : Math.min(14, 6 + Math.floor(this.difficulty * 0.7));
+      ? Math.min(4, 2 + Math.floor(this.difficulty * 0.35))
+      : Math.min(16, 7 + Math.floor(this.difficulty * 0.85));
 
     // Initial spawn: just 1 enemy (not 3), give player time to learn
     if (!this.firstSpawnDone) {
       this.firstSpawnDone = true;
       this.spawnEnemy();
-      this.spawnTimer = 4.0; // longer gap before second enemy
+      this.spawnTimer = 5.0; // longer gap before second enemy
     }
 
     // Boss rush: spawn a boss every 30s
@@ -958,8 +1073,8 @@ export class EnemyManager {
       this.spawnEnemy();
       // Slower spawns in early game
       this.spawnTimer = isEarlyGame
-        ? Math.max(2.5, 4.0 - this.difficulty * 0.35)
-        : Math.max(1.5, 3.0 - this.difficulty * 0.4);
+        ? Math.max(3.2, 5.0 - this.difficulty * 0.25)
+        : Math.max(1.15, 2.65 - this.difficulty * 0.36);
     }
 
     this.enemies = this.enemies.filter(e => {
@@ -979,9 +1094,12 @@ export class EnemyManager {
   }
 
   private spawnEnemy() {
-    const startPos = new THREE.Vector3((Math.random() - 0.5) * 35, 0, this.player.getPosition().z - 75);
+    const isOpening = this.gameElapsedTime < 30;
+    const startPos = new THREE.Vector3((Math.random() - 0.5) * 35, 0, this.player.getPosition().z - (isOpening ? 90 : 75));
     let type: EnemyType = 'STANDARD';
-    if (this.archersOnly) {
+    if (isOpening && !this.archersOnly) {
+      type = this.gameElapsedTime < 15 || Math.random() < 0.75 ? 'STANDARD' : 'RUSHER';
+    } else if (this.archersOnly) {
       type = 'ARCHER';
     } else {
       const roll = Math.random();
@@ -1001,7 +1119,7 @@ export class EnemyManager {
         this.player,
         this.audio,
         startPos,
-        this.doubleSpeedMode ? this.difficulty + 8 : this.difficulty,
+        this.doubleSpeedMode ? this.difficulty + 8 : Math.max(0, this.difficulty - (isOpening ? 2 : 0)),
         () => this.onEnemyKilled(1),
         (pos, lethal) => this.spawnHitBurst(pos, lethal),
         () => this.triggerArcherWarning(),
@@ -1022,6 +1140,19 @@ export class EnemyManager {
     return this.enemies
       .filter(e => !e.isDead_())
       .map(e => ({ x: e.mesh.position.x, z: e.mesh.position.z, type: e.getType() }));
+  }
+  public getNearestEnemyPosition(pos: THREE.Vector3, radius: number): THREE.Vector3 | null {
+    let nearest: Enemy | null = null;
+    let nearestDistSq = radius * radius;
+    for (const enemy of this.enemies) {
+      if (enemy.isDead_()) continue;
+      const distSq = enemy.mesh.position.distanceToSquared(pos);
+      if (distSq < nearestDistSq) {
+        nearest = enemy;
+        nearestDistSq = distSq;
+      }
+    }
+    return nearest ? nearest.mesh.position.clone() : null;
   }
   private gameElapsedTime = 0;
   public setGameElapsed(t: number) { this.gameElapsedTime = t; }
@@ -1089,6 +1220,12 @@ export class EnemyManager {
   public static spawnArrow(scene: THREE.Scene, player: Player, start: THREE.Vector3, target: THREE.Vector3) {
     const arrow = new Arrow(scene, player, start, target);
     EnemyManager.arrows.push(arrow);
+  }
+  public setArrowBlockers(blockers: { x: number; z: number; radius: number }[]) {
+    EnemyManager.arrowBlockers = blockers;
+  }
+  public static getArrowBlockers() {
+    return EnemyManager.arrowBlockers;
   }
 }
 
@@ -1206,40 +1343,87 @@ class HitBurst {
 class Arrow {
   private scene: THREE.Scene;
   private player: Player;
-  private mesh: THREE.Mesh;
+  private mesh: THREE.Group;
   private velocity: THREE.Vector3;
-  private life = 3.5;
-
-  private trail: THREE.Mesh;
+  private life = 4.0;
 
   constructor(scene: THREE.Scene, player: Player, start: THREE.Vector3, target: THREE.Vector3) {
     this.scene = scene;
     this.player = player;
-    // Larger, red, emissive arrow — easy to see
-    this.mesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.08, 0.08, 2.0, 6),
-      new THREE.MeshStandardMaterial({ color: 0xff4444, emissive: 0xff2222, emissiveIntensity: 0.5, roughness: 0.5 })
+    this.mesh = new THREE.Group();
+    const arrowMat = new THREE.MeshStandardMaterial({
+      color: 0xfff1a8,
+      emissive: 0xff3b1f,
+      emissiveIntensity: 1.4,
+      roughness: 0.35,
+    });
+    const shaft = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.07, 0.07, 1.8, 8),
+      arrowMat
     );
-    this.mesh.rotation.z = Math.PI / 2;
-    this.mesh.position.copy(start).add(new THREE.Vector3(0, 1.4, 0));
-    const dir = target.clone().sub(start).normalize();
-    this.velocity = dir.multiplyScalar(22);
-    // Red glowing trail behind arrow
-    this.trail = new THREE.Mesh(
-      new THREE.BoxGeometry(0.06, 0.06, 3.0),
-      new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false })
+    shaft.rotation.x = Math.PI / 2;
+    this.mesh.add(shaft);
+
+    const head = new THREE.Mesh(
+      new THREE.ConeGeometry(0.18, 0.42, 8),
+      new THREE.MeshStandardMaterial({ color: 0xffd166, emissive: 0xff5a1f, emissiveIntensity: 1.2, metalness: 0.3 })
     );
-    this.trail.position.z = -1.5;
-    this.mesh.add(this.trail);
-    // Orient arrow toward target
-    this.mesh.lookAt(target);
+    head.rotation.x = Math.PI / 2;
+    head.position.z = 1.1;
+    this.mesh.add(head);
+
+    const trail = new THREE.Mesh(
+      new THREE.ConeGeometry(0.28, 2.8, 10, 1, true),
+      new THREE.MeshBasicMaterial({
+        color: 0xff3b1f,
+        transparent: true,
+        opacity: 0.45,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      })
+    );
+    trail.rotation.x = -Math.PI / 2;
+    trail.position.z = -1.5;
+    this.mesh.add(trail);
+
+    const fletchMat = new THREE.MeshBasicMaterial({
+      color: 0xfff0a0,
+      transparent: true,
+      opacity: 0.9,
+      side: THREE.DoubleSide,
+    });
+    for (let i = 0; i < 3; i++) {
+      const fletch = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.12), fletchMat);
+      fletch.position.z = -0.95;
+      fletch.rotation.z = (i / 3) * Math.PI * 2;
+      this.mesh.add(fletch);
+    }
+
+    const startPoint = start.clone();
+    const targetPoint = target.clone().add(new THREE.Vector3(0, 1.05, 0));
+    this.mesh.position.copy(startPoint);
+    const dir = targetPoint.clone().sub(startPoint).normalize();
+    this.velocity = dir.multiplyScalar(18);
+    this.mesh.lookAt(targetPoint);
     this.scene.add(this.mesh);
   }
 
   public update(delta: number) {
     this.life -= delta;
     this.mesh.position.addScaledVector(this.velocity, delta);
+    this.mesh.lookAt(this.mesh.position.clone().add(this.velocity));
     const dist = this.mesh.position.distanceTo(this.player.getPosition());
+    if (dist < 2.8 && this.player.deflectProjectile(this.mesh.position)) {
+      this.spawnDeflectImpact();
+      this.scene.remove(this.mesh);
+      return false;
+    }
+    if (this.hitsBlocker()) {
+      this.spawnBlockerImpact();
+      this.scene.remove(this.mesh);
+      return false;
+    }
     if (dist < 2.2) {
       this.player.takeDamage(15);
       this.scene.remove(this.mesh);
@@ -1250,6 +1434,92 @@ class Arrow {
       return false;
     }
     return true;
+  }
+
+  private hitsBlocker(): boolean {
+    const pos = this.mesh.position;
+    return EnemyManager.getArrowBlockers().some(blocker => {
+      const dx = pos.x - blocker.x;
+      const dz = pos.z - blocker.z;
+      return dx * dx + dz * dz < blocker.radius * blocker.radius && pos.y < 3.2;
+    });
+  }
+
+  private spawnBlockerImpact() {
+    const spark = new THREE.Mesh(
+      new THREE.SphereGeometry(0.12, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0xffcc66, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending })
+    );
+    spark.position.copy(this.mesh.position);
+    this.scene.add(spark);
+    let life = 0.18;
+    const animate = () => {
+      life -= 0.016;
+      spark.scale.setScalar(1 + (0.18 - life) * 8);
+      (spark.material as THREE.MeshBasicMaterial).opacity = Math.max(0, life / 0.18);
+      if (life > 0) {
+        requestAnimationFrame(animate);
+      } else {
+        this.scene.remove(spark);
+      }
+    };
+    requestAnimationFrame(animate);
+  }
+
+  private spawnDeflectImpact() {
+    const ringGeo = new THREE.RingGeometry(0.25, 1.1, 24);
+    const ring = new THREE.Mesh(
+      ringGeo,
+      new THREE.MeshBasicMaterial({
+        color: 0x9fd8ff,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      })
+    );
+    ring.position.copy(this.mesh.position);
+    ring.lookAt(this.player.getCameraPosition());
+    this.scene.add(ring);
+
+    const sparkMat = new THREE.MeshBasicMaterial({
+      color: 0xfff4b8,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const sparks: THREE.Mesh[] = [];
+    for (let i = 0; i < 8; i++) {
+      const spark = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.28), sparkMat);
+      spark.position.copy(this.mesh.position);
+      spark.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+      this.scene.add(spark);
+      sparks.push(spark);
+    }
+
+    let life = 0.22;
+    const animate = () => {
+      life -= 0.016;
+      const t = Math.max(0, life / 0.22);
+      ring.scale.setScalar(1 + (1 - t) * 2.4);
+      (ring.material as THREE.MeshBasicMaterial).opacity = t * 0.9;
+      sparks.forEach((spark, i) => {
+        const angle = (i / sparks.length) * Math.PI * 2;
+        spark.position.x += Math.cos(angle) * 0.09;
+        spark.position.y += 0.035;
+        spark.position.z += Math.sin(angle) * 0.09;
+        (spark.material as THREE.MeshBasicMaterial).opacity = t * 0.95;
+      });
+      if (life > 0) {
+        requestAnimationFrame(animate);
+      } else {
+        this.scene.remove(ring);
+        sparks.forEach(spark => this.scene.remove(spark));
+      }
+    };
+    requestAnimationFrame(animate);
   }
 }
 

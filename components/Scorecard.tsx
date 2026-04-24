@@ -19,6 +19,7 @@ interface ScorecardProps {
   onShare: () => void;
   onPlayAgain: () => void;
   onDoubleCoins: () => void;
+  onOpenStore: () => void;
 }
 
 function useCountUp(target: number, duration = 1200, delay = 0) {
@@ -42,7 +43,7 @@ function useCountUp(target: number, duration = 1200, delay = 0) {
 
 const Scorecard: React.FC<ScorecardProps> = ({
   t, status, stats, profile, lastRunCoins, lastRunNewBest, canDoubleCoins, isMobile,
-  onViewScorecard, onShare, onPlayAgain, onDoubleCoins,
+  onViewScorecard, onShare, onPlayAgain, onDoubleCoins, onOpenStore,
 }) => {
   const { score, maxCombo, damageTaken, valorStrikes, objectivesCompleted } = stats;
 
@@ -259,6 +260,12 @@ const Scorecard: React.FC<ScorecardProps> = ({
                 className={`${isMobile ? 'px-5 py-3 text-sm' : 'px-8 py-4 text-sm'} bg-gradient-to-r from-orange-700 via-red-700 to-red-900 text-white font-black uppercase tracking-widest`}
               >
                 {t.ui.shareCard}
+              </button>
+              <button
+                onClick={onOpenStore}
+                className={`${isMobile ? 'px-5 py-3 text-sm' : 'px-8 py-4 text-sm'} border-2 border-yellow-700 text-yellow-300 hover:bg-yellow-950 font-bold uppercase tracking-widest`}
+              >
+                Coin Shop
               </button>
               <button
                 onClick={onPlayAgain}

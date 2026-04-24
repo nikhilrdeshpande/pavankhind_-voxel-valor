@@ -49,7 +49,7 @@ export interface ShieldSkin {
 }
 
 export const SHIELD_SKINS: ShieldSkin[] = [
-  { id: 'maratha_dhal', name: 'Maratha Dhal', nameMr: 'मराठा ढाल', faceColor: 0x8b4513, rimColor: 0xd4a017, emblemColor: 0xff6600, cost: 60 },
+  { id: 'maratha_dhal', name: 'Maratha Dhal', nameMr: 'मराठा ढाल', faceColor: 0x8b4513, rimColor: 0xd4a017, emblemColor: 0xff6600, cost: 0 },
   { id: 'iron_buckler', name: 'Iron Buckler', nameMr: 'लोखंडी ढाल', faceColor: 0x555555, rimColor: 0x888888, emblemColor: 0xcccccc, cost: 90 },
   { id: 'royal_guard', name: 'Royal Guard', nameMr: 'राजरक्षक ढाल', faceColor: 0x1a2a6a, rimColor: 0xd4a017, emblemColor: 0xffd700, cost: 150 },
 ];
@@ -67,11 +67,11 @@ export interface CosmeticState {
 const DEFAULT_STATE: CosmeticState = {
   ownedSwords: ['default'],
   ownedAngarkhas: ['default'],
-  ownedShields: [],
+  ownedShields: ['maratha_dhal'],
   equippedSword: 'default',
   equippedAngarkha: 'default',
-  equippedLeftHand: 'sword' as LeftHandType,
-  equippedShield: '',
+  equippedLeftHand: 'shield' as LeftHandType,
+  equippedShield: 'maratha_dhal',
 };
 
 export function loadCosmeticState(): CosmeticState {

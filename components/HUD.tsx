@@ -16,6 +16,8 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
     wave, weaponLevel, perkTimer, archerWarning,
     objectiveProgress, objectiveTarget, objectiveTimer,
     tutorialStep, gameElapsed, waveBanner, waveBannerTimer,
+    waveProgress, nextWaveIn, stage, stageProgress,
+    recentPickup, pickupToastTimer,
   } = stats;
 
   const prevScoreRef = useRef(score);
@@ -178,6 +180,39 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
           {score} {t.ui.elitesSlain}
         </div>
         <div className={`${isMobile ? 'text-xs' : 'text-xs'} uppercase tracking-[0.4em] text-orange-200/70`}>{t.ui.wave} {wave}</div>
+        {!isMobile && (
+          <div className="w-44 self-end">
+            <div className="h-1.5 overflow-hidden rounded-full bg-black/50 border border-orange-900/50">
+              <div
+                className="h-full transition-all duration-200"
+                style={{
+                  width: `${Math.max(0, Math.min(100, waveProgress * 100))}%`,
+                  background: 'linear-gradient(90deg, #d97706, #fbbf24)',
+                }}
+              />
+            </div>
+            <div className="mt-1 text-[9px] uppercase tracking-[0.28em] text-orange-200/50">
+              Round shift in {Math.ceil(nextWaveIn)}s
+            </div>
+          </div>
+        )}
+        {!isMobile && (
+          <div className="w-44 self-end">
+            <div className="flex justify-between text-[9px] uppercase tracking-[0.28em] text-orange-200/60">
+              <span>Stage {stage}/3</span>
+              <span>{stage === 1 ? 'Opening' : stage === 2 ? 'Escalation' : 'Final Stand'}</span>
+            </div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-black/50 border border-yellow-900/50">
+              <div
+                className="h-full transition-all duration-200"
+                style={{
+                  width: `${Math.max(0, Math.min(100, stageProgress * 100))}%`,
+                  background: stage === 3 ? 'linear-gradient(90deg, #ef4444, #facc15)' : 'linear-gradient(90deg, #f59e0b, #fde68a)',
+                }}
+              />
+            </div>
+          </div>
+        )}
         {!isMobile && <div className="text-xs uppercase tracking-[0.4em] text-orange-200/70">{t.ui.weaponLv} {weaponLevel}</div>}
         {!isMobile && <div className="text-[10px] uppercase tracking-[0.35em] text-orange-200/60">
           {t.ui.nextPerk}: {Math.ceil(perkTimer)}s
@@ -248,6 +283,26 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
         </div>
       )}
 
+      {recentPickup && pickupToastTimer > 0 && (
+        <div className="absolute left-1/2 -translate-x-1/2 z-20 pointer-events-none" style={{ top: isMobile ? '70px' : '112px' }}>
+          <div className="pickup-toast px-4 py-2 text-center" style={{
+            border: `1px solid ${recentPickup.color}`,
+            background: 'linear-gradient(180deg, rgba(8,5,2,0.82), rgba(20,10,4,0.68))',
+            boxShadow: `0 0 20px ${recentPickup.color}55`,
+          }}>
+            <div className={`${isMobile ? 'text-xs' : 'text-sm'} font-black uppercase tracking-[0.28em]`} style={{
+              color: recentPickup.color,
+              textShadow: `0 0 10px ${recentPickup.color}77`,
+            }}>
+              {recentPickup.name}
+            </div>
+            <div className={`${isMobile ? 'text-[10px]' : 'text-xs'} mt-1 uppercase tracking-[0.18em] text-orange-100/80`}>
+              {recentPickup.effect}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Valor indicator — always visible on desktop, shows charge progress */}
       {!isMobile && (
         <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 text-center">
@@ -261,7 +316,9 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
             }}>
               {rage >= 100 ? t.ui.valorReady : `VALOR ${Math.round(rage)}%`}
             </div>
-            <div className={`text-[10px] mt-1 tracking-widest ${rage >= 100 ? 'text-orange-300/80 breathe' : 'text-gray-500'}`}>V</div>
+            <div className={`text-[10px] mt-1 tracking-widest ${rage >= 100 ? 'text-orange-300/80 breathe' : 'text-gray-500'}`}>
+              {rage >= 100 ? 'V to clear nearby enemies' : 'fills when hits land'}
+            </div>
             {/* Progress bar */}
             {rage < 100 && (
               <div className="mt-1 w-20 h-1 bg-black/50 rounded-full overflow-hidden mx-auto">
@@ -346,9 +403,12 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
             </div>
             {wave > 1 && wave % 3 !== 0 && (
               <div className={`mt-2 ${isMobile ? 'text-sm' : 'text-lg'} text-orange-200/70 uppercase tracking-widest`}>
-                {(t as any).tutorial?.survivedWave || 'You survived Wave'} {wave - 1}
+                {(t as any).tutorial?.survivedWave || 'You survived Wave'} {wave - 1} — now entering {wave}
               </div>
             )}
+            <div className={`mt-3 ${isMobile ? 'text-xs' : 'text-sm'} uppercase tracking-[0.35em] text-yellow-100/65`}>
+              {stage === 1 ? 'Opening Hold' : stage === 2 ? 'Enemy Surge' : 'Final Stand'}
+            </div>
           </div>
         </div>
       )}

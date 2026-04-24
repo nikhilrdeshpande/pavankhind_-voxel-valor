@@ -19,7 +19,7 @@ const ENEMY_COLORS: Record<string, string> = {
 const Minimap: React.FC<MinimapProps> = ({ stats, isMobile }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const size = isMobile ? 70 : 100;
-  const range = 50; // world units visible on radar
+    const range = 70; // world units visible on radar
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -67,17 +67,10 @@ const Minimap: React.FC<MinimapProps> = ({ stats, isMobile }) => {
     ctx.fill();
     ctx.restore();
 
-    // Enemy dots (rotated so forward = up)
-    const playerPos = { x: 0, z: 0 }; // player is at mesh position, enemies relative
-    // We need the actual player position — use the first enemy's relative position
-    // Since we don't have player position in stats, use (0,0) as reference
-    // Actually, enemies have world positions. We need player world pos too.
-    // For now, assume player is near origin (game keeps player in the pass)
-
+    // Enemy dots rotated so the player's forward direction is always up.
     for (const e of stats.enemyPositions) {
-      // Relative position
-      const dx = e.x - 0; // relative to player (player at ~0 for X)
-      const dz = e.z - 0; // relative to player
+      const dx = e.x - stats.playerPosition.x;
+      const dz = e.z - stats.playerPosition.z;
 
       // Rotate by negative yaw so forward = up
       const sinY = Math.sin(-yaw);
@@ -108,7 +101,7 @@ const Minimap: React.FC<MinimapProps> = ({ stats, isMobile }) => {
         ctx.stroke();
       }
     }
-  }, [stats.enemyPositions, stats.playerYaw, size, range]);
+  }, [stats.enemyPositions, stats.playerPosition, stats.playerYaw, size, range]);
 
   return (
     <div
@@ -117,8 +110,8 @@ const Minimap: React.FC<MinimapProps> = ({ stats, isMobile }) => {
         width: size,
         height: size,
         bottom: isMobile ? '60px' : '80px',
-        right: isMobile ? '8px' : undefined,
-        left: isMobile ? undefined : '16px',
+        right: isMobile ? '8px' : '18px',
+        left: undefined,
       }}
     >
       <canvas

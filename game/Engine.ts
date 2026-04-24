@@ -17,6 +17,8 @@ import { ParticlePool } from './ParticlePool';
 export type { GameStats } from './GameConfig';
 export { GAME_MODES } from './GameConfig';
 
+const WAVE_DURATION = 30;
+
 // Custom vignette + damage flash + color grading shader
 const VignetteShader = {
   uniforms: {
@@ -138,6 +140,8 @@ export class PavankhindEngine {
   private score: number = 0;
   private potionTimer = 15;
   private activePotions: THREE.Group[] = [];
+  private pickupToast: { name: string; effect: string; color: string } | null = null;
+  private pickupToastTimer = 0;
   private lastReinforceZ = 0;
   private reinforceCooldown = 0;
   private callbacks: GameCallbacks;
@@ -182,6 +186,7 @@ export class PavankhindEngine {
   private prevWave = 0;
   private waveBannerTimer = 0;
   private enemyPosTimer = 0;
+  private cachedEnemyPositions: { x: number; z: number; type: string }[] = [];
 
   // Ground decals
   private groundDecals: { mesh: THREE.Mesh; life: number }[] = [];
@@ -231,14 +236,17 @@ export class PavankhindEngine {
 
     // Apply shield if equipped
     const shieldSkin = getEquippedShieldSkin(cosState);
-    if (shieldSkin) {
-      this.player.applyShield(shieldSkin.faceColor, shieldSkin.rimColor, shieldSkin.emblemColor);
-    }
+    this.player.applyShield(
+      shieldSkin?.faceColor ?? 0x8b4513,
+      shieldSkin?.rimColor ?? 0xd4a017,
+      shieldSkin?.emblemColor ?? 0xff6600
+    );
 
     this.enemyManager = new EnemyManager(this.scene, this.player, this.audioManager, (points) => {
         this.score += points;
-        this.enemyManager.setDifficulty(Math.floor(this.score / 3));
+        this.enemyManager.setDifficulty(Math.floor(this.score / 5));
     }, this.camera);
+    this.enemyManager.setArrowBlockers(this.world.getArrowBlockers());
     this.enemyManager.setDifficulty(Math.max(0, (this.config.startWave - 1) * 2));
 
     // Apply daily challenge modifiers
@@ -380,8 +388,10 @@ export class PavankhindEngine {
     const timeScale = this.player.getTimeScale();
     const delta = rawDelta * timeScale;
     this.gameTime -= delta;
-    this.wave = Math.max(this.config.startWave, Math.floor((this.config.duration - this.gameTime) / 45) + this.config.startWave);
+    const elapsedBeforeUpdate = this.config.duration - this.gameTime;
+    this.wave = Math.max(this.config.startWave, Math.floor(elapsedBeforeUpdate / WAVE_DURATION) + this.config.startWave);
 
+    this.player.setCameraFocus(this.enemyManager.getNearestEnemyPosition(this.player.getPosition(), 26));
     this.player.update(delta);
     this.enemyManager.update(delta);
 
@@ -455,8 +465,10 @@ export class PavankhindEngine {
     }
 
     const elapsed = this.config.duration - this.gameTime;
-    const timeDifficulty = Math.floor(Math.pow(elapsed / this.config.duration, 1.5) * 10);
-    this.enemyManager.setDifficulty(Math.max(timeDifficulty, Math.floor(this.score / 3)));
+    const waveDifficulty = Math.max(0, this.wave - this.config.startWave);
+    const timeDifficulty = Math.floor(Math.pow(elapsed / this.config.duration, 1.45) * 9);
+    const scoreDifficulty = Math.floor(this.score / 4);
+    this.enemyManager.setDifficulty(Math.max(waveDifficulty, timeDifficulty, scoreDifficulty));
 
     if (this.wave % 3 === 0 && this.wave !== this.lastBossWave) {
       if (!this.enemyManager.isBossActive()) {
@@ -499,22 +511,40 @@ export class PavankhindEngine {
       this.reinforceCooldown = 8.0;
     }
 
-    // Potion Logic
+    // Power-up logic
     this.potionTimer -= delta;
     if (this.potionTimer <= 0) {
-        this.activePotions.push(this.world.spawnHerb(this.player.getPosition().z - 45));
+        this.activePotions.push(this.world.spawnPowerup(this.player.getPosition().z - 45));
         this.potionTimer = 25;
     }
 
     this.activePotions = this.activePotions.filter(p => {
+        p.rotation.y += delta * 1.8;
+        p.traverse(child => {
+          if (child.userData.float) {
+            child.position.y += Math.sin(this.gameElapsed * 5 + child.id) * delta * 0.18;
+            child.rotation.y += delta * 2.6;
+          }
+          if (child.userData.spin) {
+            child.rotation.z += delta * child.userData.spin;
+            const pulse = 1 + Math.sin(this.gameElapsed * 4) * 0.08;
+            child.scale.setScalar(pulse);
+          }
+          if (child.userData.pulse) {
+            const pulse = 1 + Math.sin(this.gameElapsed * 3.6) * 0.12;
+            child.scale.setScalar(pulse);
+          }
+        });
         const dist = p.position.distanceTo(this.player.getPosition());
         if (dist < 3.0) {
-            this.player.restore(40, 100);
+            this.applyPowerup(p);
             this.scene.remove(p);
             return false;
         }
         return true;
     });
+    this.pickupToastTimer = Math.max(0, this.pickupToastTimer - delta);
+    if (this.pickupToastTimer <= 0) this.pickupToast = null;
 
     // Particle pool update
     this.particlePool.update(delta);
@@ -548,9 +578,16 @@ export class PavankhindEngine {
 
     // Throttle enemy position updates to every 250ms
     this.enemyPosTimer -= delta;
-    const enemyPositions = this.enemyPosTimer <= 0
-      ? (this.enemyPosTimer = 0.25, this.enemyManager.getEnemyPositions())
-      : [];
+    if (this.enemyPosTimer <= 0) {
+      this.enemyPosTimer = 0.2;
+      this.cachedEnemyPositions = this.enemyManager.getEnemyPositions();
+    }
+    const waveElapsed = Math.max(0, elapsed % WAVE_DURATION);
+    const nextWaveIn = Math.max(0, WAVE_DURATION - waveElapsed);
+    const stageRaw = Math.min(0.999, Math.max(0, elapsed / this.config.duration)) * 3;
+    const stage = Math.min(3, Math.floor(stageRaw) + 1);
+    const stageProgress = stageRaw % 1;
+    const playerPos = this.player.getPosition();
 
     this.callbacks.onStatsUpdate({
       health: this.player.getHealth(),
@@ -573,11 +610,18 @@ export class PavankhindEngine {
       objectivesCompleted: this.objectivesCompleted,
       tutorialStep: this.tutorialStep,
       gameElapsed: this.gameElapsed,
-      waveBanner: this.waveBannerTimer > 0 ? `WAVE ${this.wave}` : null,
+      waveBanner: this.waveBannerTimer > 0 ? `ROUND ${this.wave}` : null,
       waveBannerTimer: this.waveBannerTimer,
       dodgeCooldown: this.player.getDodgeCooldown(),
-      enemyPositions,
+      enemyPositions: this.cachedEnemyPositions,
+      playerPosition: { x: playerPos.x, z: playerPos.z },
       playerYaw: this.player.getYaw(),
+      waveProgress: waveElapsed / WAVE_DURATION,
+      nextWaveIn,
+      stage,
+      stageProgress,
+      recentPickup: this.pickupToast,
+      pickupToastTimer: this.pickupToastTimer,
     });
 
     if (this.player.getHealth() <= 0 && !this.deathSequenceActive) {
@@ -593,6 +637,38 @@ export class PavankhindEngine {
         this.audioManager.playShankh();
         this.callbacks.onWin();
     }
+  }
+
+  private applyPowerup(powerup: THREE.Group) {
+    const kind = powerup.userData.powerupKind;
+    if (kind === 'utsah') {
+      this.player.restore(0, 100);
+      this.player.refreshDodge();
+    } else if (kind === 'parakram') {
+      this.player.gainValor(50);
+    } else if (kind === 'dhal') {
+      this.player.restore(25, 45);
+      this.player.gainValor(15);
+    } else {
+      this.player.restore(40, 100);
+    }
+
+    const color = new THREE.Color(powerup.userData.powerupColor || '#7cffc4');
+    this.particlePool.emit(
+      28,
+      powerup.position.clone().add(new THREE.Vector3(0, 1.0, 0)),
+      { x: 5, y: 6, z: 5 },
+      [0.35, 0.75],
+      color,
+      [0.9, 1.8],
+      8
+    );
+    this.pickupToast = {
+      name: powerup.userData.powerupName || 'Power-up',
+      effect: powerup.userData.powerupEffect || 'Bonus applied',
+      color: powerup.userData.powerupColor || '#7cffc4',
+    };
+    this.pickupToastTimer = 2.6;
   }
 
   private updateDynamicFOV(delta: number) {
@@ -670,7 +746,7 @@ export class PavankhindEngine {
     if (!this.isActive) {
       this.camera.position.set(0, 3.5, 8);
       this.camera.rotation.order = 'YXZ';
-      this.camera.rotation.set(-0.35, 0, 0);
+      this.camera.rotation.set(-0.75, 0, 0);
     }
 
     if (this.composer) {

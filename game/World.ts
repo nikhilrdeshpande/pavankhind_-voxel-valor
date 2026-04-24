@@ -7,6 +7,15 @@ interface Torch {
   phase: number; // random offset for flicker
 }
 
+export type PowerupKind = 'amrut' | 'utsah' | 'parakram' | 'dhal';
+
+export interface PowerupInfo {
+  kind: PowerupKind;
+  name: string;
+  effect: string;
+  color: string;
+}
+
 export class World {
   private scene: THREE.Scene;
   private reinforcementCount = 0;
@@ -58,6 +67,7 @@ export class World {
   // Stream
   private streamMaterial: THREE.ShaderMaterial | null = null;
   private waterfallMaterials: THREE.ShaderMaterial[] = [];
+  private arrowBlockers: { x: number; z: number; radius: number }[] = [];
 
   constructor(scene: THREE.Scene, isMobile = false) {
     this.scene = scene;
@@ -285,6 +295,9 @@ export class World {
         d.scale.setScalar(size);
         d.updateMatrix();
         rockMesh.setMatrixAt(i, d.matrix);
+        if (size > 1.2 && Math.abs(d.position.x) < 23) {
+          this.arrowBlockers.push({ x: d.position.x, z: d.position.z, radius: size * 1.25 });
+        }
       }
       rockMesh.instanceMatrix.needsUpdate = true;
       this.scene.add(rockMesh);
@@ -575,6 +588,8 @@ this.scene.add(rimLight);
     this.spawnTeammates();
     this.spawnWallGuards();
     this.spawnPassGates();
+    this.createBattlefieldLandmarks(gapWidth);
+    this.createStageGateways(gapWidth);
 
     // --- Ambient Embers ---
     this.emberMesh = this.createEmbers();
@@ -802,6 +817,178 @@ this.scene.add(rimLight);
     }
     this.dustMoteMesh.instanceMatrix.needsUpdate = true;
     this.scene.add(this.dustMoteMesh);
+  }
+
+  private createBattlefieldLandmarks(gapWidth: number) {
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x4a3018, roughness: 0.95 });
+    const ropeMat = new THREE.MeshStandardMaterial({ color: 0x8a6b3f, roughness: 0.9 });
+    const saffronMat = new THREE.MeshStandardMaterial({
+      color: 0xff6a00,
+      emissive: 0xff3b00,
+      emissiveIntensity: 0.25,
+      roughness: 0.75,
+      side: THREE.DoubleSide,
+    });
+    const enemyBannerMat = new THREE.MeshStandardMaterial({
+      color: 0x14301f,
+      emissive: 0x07140d,
+      emissiveIntensity: 0.2,
+      roughness: 0.85,
+      side: THREE.DoubleSide,
+    });
+
+    const landmarkZ = [-160, -430, -720, -1010];
+    for (let i = 0; i < landmarkZ.length; i++) {
+      const z = landmarkZ[i];
+      const side = i % 2 === 0 ? -1 : 1;
+      const x = side * (gapWidth * 0.28);
+
+      const tripod = new THREE.Group();
+      for (let leg = 0; leg < 3; leg++) {
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 5.5, 5), woodMat);
+        pole.position.y = 2.4;
+        pole.rotation.z = (leg - 1) * 0.22;
+        pole.rotation.y = (leg / 3) * Math.PI * 2;
+        tripod.add(pole);
+      }
+      const cross = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.8, 5), ropeMat);
+      cross.position.y = 4.6;
+      cross.rotation.z = Math.PI / 2;
+      tripod.add(cross);
+      tripod.position.set(x, 0, z);
+      tripod.rotation.y = side > 0 ? -0.25 : 0.25;
+      this.scene.add(tripod);
+
+      const bannerPole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 7.5, 5), woodMat);
+      bannerPole.position.set(-side * (gapWidth * 0.32), 3.6, z - 30);
+      this.scene.add(bannerPole);
+
+      const banner = new THREE.Mesh(
+        new THREE.BoxGeometry(3.2, 2.1, 0.05),
+        i % 2 === 0 ? saffronMat : enemyBannerMat
+      );
+      banner.position.set(-side * (gapWidth * 0.32) + 1.5, 6.1, z - 30);
+      this.scene.add(banner);
+      this.flags.push({ mesh: banner, phase: Math.random() * Math.PI * 2 });
+    }
+
+    const drumMat = new THREE.MeshStandardMaterial({ color: 0x6b3018, roughness: 0.8 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xd8b98a, roughness: 0.75 });
+    for (let i = 0; i < 6; i++) {
+      const side = i % 2 === 0 ? -1 : 1;
+      const z = -220 - i * 150;
+      const drum = new THREE.Group();
+      const shell = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.9, 10), drumMat);
+      shell.rotation.z = Math.PI / 2;
+      drum.add(shell);
+      const faceL = new THREE.Mesh(new THREE.CircleGeometry(0.52, 10), skinMat);
+      faceL.position.x = -0.46;
+      faceL.rotation.y = -Math.PI / 2;
+      drum.add(faceL);
+      const faceR = new THREE.Mesh(new THREE.CircleGeometry(0.52, 10), skinMat);
+      faceR.position.x = 0.46;
+      faceR.rotation.y = Math.PI / 2;
+      drum.add(faceR);
+      drum.position.set(side * (gapWidth * 0.22 + Math.random() * 4), 0.55, z);
+      drum.rotation.y = Math.random() * Math.PI;
+      this.scene.add(drum);
+    }
+
+    const arrowMat = new THREE.MeshStandardMaterial({ color: 0xc7a86a, roughness: 0.75 });
+    const fletchMat = new THREE.MeshStandardMaterial({ color: 0xff6a00, emissive: 0x552000, emissiveIntensity: 0.2 });
+    for (let i = 0; i < 26; i++) {
+      const arrow = new THREE.Group();
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 2.2, 4), arrowMat);
+      shaft.rotation.x = Math.PI / 2;
+      arrow.add(shaft);
+      const fletch = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.05, 0.18), fletchMat);
+      fletch.position.z = -1.0;
+      arrow.add(fletch);
+      arrow.position.set((Math.random() - 0.5) * (gapWidth * 0.65), 0.25, -120 - Math.random() * 1050);
+      arrow.rotation.set(-0.8 + Math.random() * 0.35, Math.random() * Math.PI, 0.15 - Math.random() * 0.3);
+      this.scene.add(arrow);
+    }
+  }
+
+  private createStageGateways(gapWidth: number) {
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x5f4a3a, roughness: 0.95 });
+    const trimMat = new THREE.MeshStandardMaterial({ color: 0xa66a2a, roughness: 0.85 });
+    const flameMat = new THREE.MeshStandardMaterial({
+      color: 0xff7a1a,
+      emissive: 0xff3b0a,
+      emissiveIntensity: 2.2,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const bannerColors = [0xff7a00, 0xb91c1c, 0xfacc15];
+    const stageZ = [-300, -690, -1080];
+
+    stageZ.forEach((z, idx) => {
+      const group = new THREE.Group();
+      const width = gapWidth * 0.72;
+      for (const side of [-1, 1]) {
+        const pillar = new THREE.Mesh(new THREE.BoxGeometry(2.2, 7.5 + idx * 1.2, 2.2), stoneMat);
+        pillar.position.set(side * width * 0.5, 3.75 + idx * 0.6, 0);
+        pillar.castShadow = true;
+        pillar.receiveShadow = true;
+        group.add(pillar);
+
+        const cap = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.8, 3.0), trimMat);
+        cap.position.set(side * width * 0.5, 7.8 + idx * 1.2, 0);
+        cap.castShadow = true;
+        group.add(cap);
+
+        const brazier = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.75, 0.45, 8), trimMat);
+        brazier.position.set(side * width * 0.5, 8.45 + idx * 1.2, 0);
+        group.add(brazier);
+
+        const flame = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.1, 8), flameMat);
+        flame.position.set(side * width * 0.5, 9.1 + idx * 1.2, 0);
+        group.add(flame);
+
+        if (!this.isMobile) {
+          const light = new THREE.PointLight(0xff7a22, 45 + idx * 20, 28);
+          light.position.copy(flame.position);
+          group.add(light);
+        }
+      }
+
+      const lintel = new THREE.Mesh(new THREE.BoxGeometry(width + 4, 1.0, 2.5), stoneMat);
+      lintel.position.set(0, 7.8 + idx * 1.2, 0);
+      lintel.castShadow = true;
+      group.add(lintel);
+
+      const bannerMat = new THREE.MeshStandardMaterial({
+        color: bannerColors[idx],
+        emissive: bannerColors[idx],
+        emissiveIntensity: 0.2 + idx * 0.12,
+        roughness: 0.8,
+        side: THREE.DoubleSide,
+      });
+      const banner = new THREE.Mesh(new THREE.BoxGeometry(5 + idx, 2.1, 0.08), bannerMat);
+      banner.position.set(0, 6.15 + idx * 1.1, -0.2);
+      group.add(banner);
+      this.flags.push({ mesh: banner, phase: Math.random() * Math.PI * 2 });
+
+      const ringGeo = new THREE.RingGeometry(4.5 + idx, 4.8 + idx, 32);
+      ringGeo.rotateX(-Math.PI / 2);
+      const ring = new THREE.Mesh(
+        ringGeo,
+        new THREE.MeshBasicMaterial({
+          color: bannerColors[idx],
+          transparent: true,
+          opacity: 0.18,
+          blending: THREE.AdditiveBlending,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        })
+      );
+      ring.position.y = 0.08;
+      group.add(ring);
+
+      group.position.set(0, 0, z);
+      this.scene.add(group);
+    });
   }
 
   private spawnTorches(gapWidth: number) {
@@ -1195,31 +1382,173 @@ this.scene.add(rimLight);
     spawnSide(1, enemyMat);
   }
 
-  public spawnHerb(z: number): THREE.Group {
+  public spawnPowerup(z: number, kind: PowerupKind = this.pickPowerupKind()): THREE.Group {
     const group = new THREE.Group();
-    // Amrut Jar Visual
-    const jar = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.4, 0.5, 0.9, 8),
-        new THREE.MeshStandardMaterial({ color: 0xff8800, emissive: 0xff4400, emissiveIntensity: 3 })
-    );
-    jar.position.y = 0.5;
-    group.add(jar);
+    const info = this.getPowerupInfo(kind);
+    group.userData.powerupKind = kind;
+    group.userData.powerupName = info.name;
+    group.userData.powerupEffect = info.effect;
+    group.userData.powerupColor = info.color;
 
+    const auraColor = parseInt(info.color.slice(1), 16);
     const aura = new THREE.Mesh(
-        new THREE.TorusGeometry(0.8, 0.05, 8, 16),
-        new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.5 })
+      new THREE.TorusGeometry(0.9, 0.05, 8, 24),
+      new THREE.MeshBasicMaterial({ color: auraColor, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending })
     );
     aura.rotation.x = Math.PI / 2;
     aura.position.y = 0.5;
+    aura.userData.spin = 2.5;
+
+    if (kind === 'amrut') {
+      const jarMat = new THREE.MeshStandardMaterial({
+        color: 0xff8800,
+        emissive: 0xff4400,
+        emissiveIntensity: 2.5,
+        metalness: 0.15,
+        roughness: 0.35,
+      });
+      const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.55, 0.9, 10), jarMat);
+      jar.position.y = 0.5;
+      group.add(jar);
+
+      const gem = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.34, 0),
+        new THREE.MeshStandardMaterial({ color: 0x7cffc4, emissive: 0x18ff9a, emissiveIntensity: 2.8, roughness: 0.2 })
+      );
+      gem.position.y = 1.25;
+      gem.userData.float = true;
+      group.add(gem);
+    } else if (kind === 'utsah') {
+      const stemMat = new THREE.MeshStandardMaterial({ color: 0x2f6f36, emissive: 0x0a3f16, emissiveIntensity: 0.3, roughness: 0.7 });
+      const leafMat = new THREE.MeshStandardMaterial({ color: 0x8cff66, emissive: 0x2fff40, emissiveIntensity: 1.6, roughness: 0.45 });
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.85, 7), stemMat);
+      stem.position.y = 0.45;
+      group.add(stem);
+      for (let i = 0; i < 5; i++) {
+        const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.75, 5), leafMat);
+        leaf.position.set(Math.cos(i * 1.26) * 0.25, 0.82, Math.sin(i * 1.26) * 0.25);
+        leaf.rotation.z = Math.PI / 2.5;
+        leaf.rotation.y = i * 1.26;
+        leaf.userData.float = true;
+        group.add(leaf);
+      }
+    } else if (kind === 'parakram') {
+      const flameMat = new THREE.MeshStandardMaterial({
+        color: 0xff4a1c,
+        emissive: 0xff1800,
+        emissiveIntensity: 3.2,
+        roughness: 0.35,
+      });
+      const flame = new THREE.Mesh(new THREE.ConeGeometry(0.38, 1.25, 9), flameMat);
+      flame.position.y = 0.85;
+      flame.userData.float = true;
+      group.add(flame);
+      const core = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.28, 0),
+        new THREE.MeshBasicMaterial({ color: 0xfff0a0, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending })
+      );
+      core.position.y = 0.82;
+      core.userData.float = true;
+      group.add(core);
+    } else {
+      const shield = new THREE.Group();
+      const face = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.48, 0.48, 0.16, 18),
+        new THREE.MeshStandardMaterial({ color: 0x3a4d7a, metalness: 0.45, roughness: 0.35, emissive: 0x061a44, emissiveIntensity: 0.5 })
+      );
+      face.rotation.x = Math.PI / 2;
+      shield.add(face);
+      const boss = new THREE.Mesh(
+        new THREE.SphereGeometry(0.16, 10, 10),
+        new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.85, roughness: 0.22, emissive: 0x8a5a00, emissiveIntensity: 0.4 })
+      );
+      boss.position.z = 0.12;
+      shield.add(boss);
+      shield.position.y = 0.8;
+      shield.userData.float = true;
+      group.add(shield);
+    }
+
     group.add(aura);
 
-    const light = new THREE.PointLight(0xffaa00, 60, 25);
+    const halo = new THREE.Mesh(
+      new THREE.RingGeometry(0.55, 0.95, 24),
+      new THREE.MeshBasicMaterial({ color: auraColor, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })
+    );
+    halo.rotation.x = Math.PI / 2;
+    halo.position.y = 0.08;
+    halo.userData.pulse = true;
+    group.add(halo);
+
+    const light = new THREE.PointLight(auraColor, 90, 30);
+    light.position.y = 1.1;
     group.add(light);
+
+    const label = this.createPowerupLabel(info);
+    group.add(label);
 
     group.position.set((Math.random() - 0.5) * 35, 0.6, z);
 
-    // Add logic to rotate jar in engine if needed, or just let it stay
     this.scene.add(group);
     return group;
+  }
+
+  public spawnHerb(z: number): THREE.Group {
+    return this.spawnPowerup(z, 'amrut');
+  }
+
+  private pickPowerupKind(): PowerupKind {
+    const roll = Math.random();
+    if (roll < 0.38) return 'amrut';
+    if (roll < 0.65) return 'utsah';
+    if (roll < 0.86) return 'parakram';
+    return 'dhal';
+  }
+
+  private getPowerupInfo(kind: PowerupKind): PowerupInfo {
+    if (kind === 'utsah') {
+      return { kind, name: 'Utsah Herb', effect: 'Full stamina + dodge ready', color: '#8cff66' };
+    }
+    if (kind === 'parakram') {
+      return { kind, name: 'Parakram Flame', effect: '+50 Valor charge', color: '#ff4a1c' };
+    }
+    if (kind === 'dhal') {
+      return { kind, name: 'Dhal Ward', effect: '+25 HP + shield stamina', color: '#7fb3ff' };
+    }
+    return { kind, name: 'Amrut Kalash', effect: '+40 HP + full stamina', color: '#7cffc4' };
+  }
+
+  private createPowerupLabel(info: PowerupInfo): THREE.Sprite {
+    const labelCanvas = document.createElement('canvas');
+    labelCanvas.width = 288;
+    labelCanvas.height = 104;
+    const ctx = labelCanvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = 'rgba(10, 6, 2, 0.76)';
+      ctx.fillRect(0, 0, labelCanvas.width, labelCanvas.height);
+      ctx.strokeStyle = info.color;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(3, 3, labelCanvas.width - 6, labelCanvas.height - 6);
+      ctx.fillStyle = '#fff4c2';
+      ctx.font = '700 25px serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(info.name.toUpperCase(), 144, 38);
+      ctx.fillStyle = info.color;
+      ctx.font = '700 19px sans-serif';
+      ctx.fillText(info.effect.toUpperCase(), 144, 72);
+    }
+    const labelTexture = new THREE.CanvasTexture(labelCanvas);
+    const label = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: labelTexture,
+      transparent: true,
+      depthWrite: false,
+    }));
+    label.scale.set(4.5, 1.65, 1);
+    label.position.y = 2.25;
+    return label;
+  }
+
+  public getArrowBlockers() {
+    return this.arrowBlockers;
   }
 }
