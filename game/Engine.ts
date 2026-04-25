@@ -184,7 +184,9 @@ export class PavankhindEngine {
   private tutorialStep = 0;
   private gameElapsed = 0;
   private prevWave = 0;
+  private prevStage = 0;
   private waveBannerTimer = 0;
+  private stageBannerTimer = 0;
   private enemyPosTimer = 0;
   private cachedEnemyPositions: { x: number; z: number; type: string }[] = [];
 
@@ -465,10 +467,13 @@ export class PavankhindEngine {
     }
 
     const elapsed = this.config.duration - this.gameTime;
+    const stageRawForDifficulty = Math.min(0.999, Math.max(0, elapsed / this.config.duration)) * 3;
+    const currentStage = Math.min(3, Math.floor(stageRawForDifficulty) + 1);
     const waveDifficulty = Math.max(0, this.wave - this.config.startWave);
-    const timeDifficulty = Math.floor(Math.pow(elapsed / this.config.duration, 1.45) * 9);
+    const timeDifficulty = Math.floor(Math.pow(elapsed / this.config.duration, 1.45) * 9) + (currentStage - 1);
     const scoreDifficulty = Math.floor(this.score / 4);
     this.enemyManager.setDifficulty(Math.max(waveDifficulty, timeDifficulty, scoreDifficulty));
+    this.enemyManager.setStage(currentStage);
 
     if (this.wave % 3 === 0 && this.wave !== this.lastBossWave) {
       if (!this.enemyManager.isBossActive()) {
@@ -584,9 +589,19 @@ export class PavankhindEngine {
     }
     const waveElapsed = Math.max(0, elapsed % WAVE_DURATION);
     const nextWaveIn = Math.max(0, WAVE_DURATION - waveElapsed);
-    const stageRaw = Math.min(0.999, Math.max(0, elapsed / this.config.duration)) * 3;
+    const stageRaw = stageRawForDifficulty;
     const stage = Math.min(3, Math.floor(stageRaw) + 1);
     const stageProgress = stageRaw % 1;
+    const stageInfo = this.getStageInfo(stage);
+    if (stage !== this.prevStage) {
+      this.stageBannerTimer = stage === 1 ? 3.0 : 3.6;
+      this.prevStage = stage;
+      if (stage > 1) {
+        this.audioManager.playDholAccent();
+      }
+    }
+    if (this.stageBannerTimer > 0) this.stageBannerTimer -= delta;
+    const cannonSignals = Math.max(0, Math.min(3, stage - 1));
     const playerPos = this.player.getPosition();
 
     this.callbacks.onStatsUpdate({
@@ -610,7 +625,7 @@ export class PavankhindEngine {
       objectivesCompleted: this.objectivesCompleted,
       tutorialStep: this.tutorialStep,
       gameElapsed: this.gameElapsed,
-      waveBanner: this.waveBannerTimer > 0 ? `ROUND ${this.wave}` : null,
+      waveBanner: this.waveBannerTimer > 0 && this.stageBannerTimer <= 0 ? `ROUND ${this.wave}` : null,
       waveBannerTimer: this.waveBannerTimer,
       dodgeCooldown: this.player.getDodgeCooldown(),
       enemyPositions: this.cachedEnemyPositions,
@@ -620,6 +635,11 @@ export class PavankhindEngine {
       nextWaveIn,
       stage,
       stageProgress,
+      stageName: stageInfo.name,
+      stageDirective: stageInfo.directive,
+      stageBanner: this.stageBannerTimer > 0 ? stageInfo.name : null,
+      stageBannerTimer: this.stageBannerTimer,
+      cannonSignals,
       recentPickup: this.pickupToast,
       pickupToastTimer: this.pickupToastTimer,
     });
@@ -637,6 +657,25 @@ export class PavankhindEngine {
         this.audioManager.playShankh();
         this.callbacks.onWin();
     }
+  }
+
+  private getStageInfo(stage: number) {
+    if (stage === 2) {
+      return {
+        name: 'Enemy Surge',
+        directive: 'Archers and shield troops are pressing the pass.',
+      };
+    }
+    if (stage === 3) {
+      return {
+        name: 'Final Stand',
+        directive: 'Hold until the cannon signal reaches Vishalgad.',
+      };
+    }
+    return {
+      name: 'Opening Hold',
+      directive: 'Stop the scouts. Hold the narrow pass.',
+    };
   }
 
   private applyPowerup(powerup: THREE.Group) {

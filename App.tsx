@@ -35,6 +35,9 @@ const defaultStats: GameStats = {
   tutorialStep: 0, gameElapsed: 0, waveBanner: null, waveBannerTimer: 0,
   dodgeCooldown: 0, enemyPositions: [], playerPosition: { x: 0, z: 0 }, playerYaw: 0,
   waveProgress: 0, nextWaveIn: 30, stage: 1, stageProgress: 0,
+  stageName: 'Opening Hold', stageDirective: 'Stop the scouts. Hold the pass.',
+  stageBanner: null, stageBannerTimer: 0, cannonSignals: 0,
+  recentPickup: null, pickupToastTimer: 0,
 };
 
 const perkOptions = [
@@ -217,6 +220,11 @@ const App: React.FC = () => {
 
   const selectPerk = useCallback((id: string) => {
     engineRef.current?.applyPerk(id);
+    setStats(prev => ({
+      ...prev,
+      perkReady: false,
+      perkTimer: 60,
+    }));
     setShowPerkChoice(false);
     setPaused(false);
   }, []);

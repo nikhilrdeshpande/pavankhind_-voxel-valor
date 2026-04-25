@@ -4,8 +4,10 @@ This document describes the core gameplay systems, terms, and UI elements.
 
 ## Core Objective
 
-- Survive 5 minutes until the third cannon.
+- Survive the selected mode duration until the third cannon signal.
+- Skirmish lasts 90 seconds, Battle lasts 3 minutes, and Last Stand lasts 5 minutes.
 - Build score by defeating enemies and completing objectives.
+- The fight is divided into three story stages: Opening Hold, Enemy Surge, and Final Stand.
 
 ## Combat Basics
 
@@ -55,9 +57,12 @@ This document describes the core gameplay systems, terms, and UI elements.
 
 ## Difficulty Scaling
 
-- Waves intensify over time.
-- Mini-bosses appear every 2 waves.
-- Enemy difficulty scales with time and score.
+- Rounds shift every 30 seconds.
+- Enemy difficulty scales with time, score, and stage.
+- Stage 1 focuses on melee and rusher pressure.
+- Stage 2 adds more archers and shield enemies.
+- Stage 3 adds heavier elite pressure with brutes, shielders, archers, and boss threats.
+- Mini-bosses appear on major escalation waves.
 
 ## HUD Elements
 
@@ -65,6 +70,8 @@ This document describes the core gameplay systems, terms, and UI elements.
 - Spirit: Stamina bar.
 - Valor: Ultimate meter.
 - Wave: Current wave count.
+- Stage: Current story stage and directive.
+- Cannon Signal: three pips showing progress toward Vishalgad's signal.
 - Weapon Lv: Current weapon level.
 - Objective Meter: Progress and time remaining.
 - Combo Banner: FURY / ONSLAUGHT / MYTHIC tiers.

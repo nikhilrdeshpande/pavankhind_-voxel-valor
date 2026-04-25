@@ -57,6 +57,7 @@ export class Player {
   private leftSword: THREE.Mesh;
   private leftSwordPivot!: THREE.Group;
   private shieldGroup: THREE.Group | null = null;
+  private valorAura!: THREE.Mesh;
   private hasShield = false;
   private cameraOffset = new THREE.Vector3(0, 7.2, 8.8);
   private cameraFocusTarget: THREE.Vector3 | null = null;
@@ -507,6 +508,23 @@ export class Player {
 
     this.mesh.position.y = this.groundY;
 
+    const valorAuraGeo = new THREE.RingGeometry(1.15, 1.55, 36);
+    valorAuraGeo.rotateX(-Math.PI / 2);
+    this.valorAura = new THREE.Mesh(
+      valorAuraGeo,
+      new THREE.MeshBasicMaterial({
+        color: 0xffb000,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      })
+    );
+    this.valorAura.position.y = -0.92;
+    this.valorAura.visible = false;
+    this.mesh.add(this.valorAura);
+
     // --- Sword Trail ---
     this.trailMesh = this.createSwordTrail();
     scene.add(this.trailMesh);
@@ -786,6 +804,29 @@ export class Player {
     } else {
       material.emissive.setHex(0x000000);
       material.emissiveIntensity = 0;
+    }
+    this.updateHeroStateVisuals(delta);
+  }
+
+  private updateHeroStateVisuals(delta: number) {
+    const auraMat = this.valorAura.material as THREE.MeshBasicMaterial;
+    const valorReady = this.rage >= 100;
+    this.valorAura.visible = valorReady || auraMat.opacity > 0.02;
+    const targetOpacity = valorReady ? 0.62 : 0;
+    auraMat.opacity = THREE.MathUtils.lerp(auraMat.opacity, targetOpacity, delta * 8);
+    const auraPulse = 1 + Math.sin(this.elapsedTime * 5) * 0.08;
+    this.valorAura.scale.setScalar(auraPulse);
+    this.valorAura.rotation.z += delta * (valorReady ? 1.8 : 0.6);
+
+    if (this.shieldGroup) {
+      const targetShieldGlow = this.isBlocking ? 0.42 : 0.08;
+      this.shieldGroup.traverse(child => {
+        if (!(child as THREE.Mesh).isMesh) return;
+        const mat = (child as THREE.Mesh).material as THREE.MeshStandardMaterial;
+        if (!mat.emissive) return;
+        mat.emissive.setHex(this.isBlocking ? 0x8fc7ff : mat.color.getHex());
+        mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, targetShieldGlow, delta * 10);
+      });
     }
   }
 

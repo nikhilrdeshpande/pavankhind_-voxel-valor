@@ -38,9 +38,13 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
           <div className={`w-full max-w-3xl border-2 border-orange-900/60 bg-zinc-900/90 ${isMobile ? 'p-3 mx-2' : 'p-8'} text-center shadow-[0_0_60px_rgba(0,0,0,0.7)]`}>
             <div className={`${isMobile ? 'text-[9px]' : 'text-xs'} uppercase tracking-[0.5em] text-orange-200/70`}>{t.ui.choosePath}</div>
             <div className={`${isMobile ? 'mt-1 text-xl' : 'mt-4 text-3xl'} font-black uppercase text-orange-100`}>{t.ui.perkUnlocked}</div>
+            <div className={`${isMobile ? 'mt-1 text-[10px]' : 'mt-3 text-xs'} uppercase tracking-[0.24em] text-orange-200/60`}>
+              Choose one upgrade. The fight resumes immediately.
+            </div>
             <div className={`${isMobile ? 'mt-2' : 'mt-6'} grid gap-2 grid-cols-3`}>
               {perkOptions.map(option => (
                 <button
+                  type="button"
                   key={option.id}
                   onClick={() => onSelectPerk(option.id)}
                   className={`bg-black/40 ${isMobile ? 'px-2 py-2' : 'px-4 py-6'} text-left text-orange-100 hover:bg-orange-500/20 transition-all`}

@@ -89,6 +89,14 @@ export class World {
     this.sunLight.position.set(-120, 180, -200);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.set(shadowRes, shadowRes);
+    this.sunLight.shadow.camera.left = -90;
+    this.sunLight.shadow.camera.right = 90;
+    this.sunLight.shadow.camera.top = 140;
+    this.sunLight.shadow.camera.bottom = -140;
+    this.sunLight.shadow.camera.near = 1;
+    this.sunLight.shadow.camera.far = 520;
+    this.sunLight.shadow.bias = -0.00015;
+    this.sunLight.shadow.normalBias = 0.04;
     scene.add(this.sunLight);
 
     // Dynamic fog — blue-grey Sahyadri mist
@@ -238,7 +246,6 @@ export class World {
         const wall = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), mat);
         const xPos = side * (gapWidth * 0.5 + 22 + Math.random() * 10);
         wall.position.set(xPos, height * 0.45, z);
-        wall.castShadow = true;
         wall.receiveShadow = true;
         this.scene.add(wall);
 
@@ -929,13 +936,11 @@ this.scene.add(rimLight);
       for (const side of [-1, 1]) {
         const pillar = new THREE.Mesh(new THREE.BoxGeometry(2.2, 7.5 + idx * 1.2, 2.2), stoneMat);
         pillar.position.set(side * width * 0.5, 3.75 + idx * 0.6, 0);
-        pillar.castShadow = true;
         pillar.receiveShadow = true;
         group.add(pillar);
 
         const cap = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.8, 3.0), trimMat);
         cap.position.set(side * width * 0.5, 7.8 + idx * 1.2, 0);
-        cap.castShadow = true;
         group.add(cap);
 
         const brazier = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.75, 0.45, 8), trimMat);
@@ -955,7 +960,6 @@ this.scene.add(rimLight);
 
       const lintel = new THREE.Mesh(new THREE.BoxGeometry(width + 4, 1.0, 2.5), stoneMat);
       lintel.position.set(0, 7.8 + idx * 1.2, 0);
-      lintel.castShadow = true;
       group.add(lintel);
 
       const bannerMat = new THREE.MeshStandardMaterial({

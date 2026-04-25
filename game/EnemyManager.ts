@@ -1036,6 +1036,7 @@ export class EnemyManager {
   private doubleSpeedMode = false;
   private bossRushMode = false;
   private bossRushTimer = 0;
+  private currentStage = 1;
 
   constructor(scene: THREE.Scene, player: Player, audio: AudioManager, onEnemyKilled: (points: number) => void, camera?: THREE.Camera) {
     this.scene = scene;
@@ -1049,9 +1050,10 @@ export class EnemyManager {
     this.spawnTimer -= delta;
     // Early game: fewer concurrent enemies, slower spawn, fewer ranged threats.
     const isEarlyGame = this.gameElapsedTime < 30;
+    const stagePressure = Math.max(0, this.currentStage - 1);
     const maxEnemies = isEarlyGame
       ? Math.min(4, 2 + Math.floor(this.difficulty * 0.35))
-      : Math.min(16, 7 + Math.floor(this.difficulty * 0.85));
+      : Math.min(18, 7 + stagePressure * 2 + Math.floor(this.difficulty * 0.85));
 
     // Initial spawn: just 1 enemy (not 3), give player time to learn
     if (!this.firstSpawnDone) {
@@ -1074,7 +1076,7 @@ export class EnemyManager {
       // Slower spawns in early game
       this.spawnTimer = isEarlyGame
         ? Math.max(3.2, 5.0 - this.difficulty * 0.25)
-        : Math.max(1.15, 2.65 - this.difficulty * 0.36);
+        : Math.max(0.95, 2.75 - stagePressure * 0.22 - this.difficulty * 0.34);
     }
 
     this.enemies = this.enemies.filter(e => {
@@ -1101,16 +1103,34 @@ export class EnemyManager {
       type = this.gameElapsedTime < 15 || Math.random() < 0.75 ? 'STANDARD' : 'RUSHER';
     } else if (this.archersOnly) {
       type = 'ARCHER';
-    } else {
+    } else if (this.currentStage === 1) {
       const roll = Math.random();
-      if (roll > 0.93) {
-        type = 'BRUTE';
-      } else if (roll > 0.83) {
-        type = 'SHIELDER';
+      if (roll > 0.88) {
+        type = 'ARCHER';
       } else if (roll > 0.68) {
         type = 'RUSHER';
-      } else if (roll > 0.52) {
+      }
+    } else if (this.currentStage === 2) {
+      const roll = Math.random();
+      if (roll > 0.92) {
+        type = 'BRUTE';
+      } else if (roll > 0.76) {
+        type = 'SHIELDER';
+      } else if (roll > 0.54) {
         type = 'ARCHER';
+      } else if (roll > 0.34) {
+        type = 'RUSHER';
+      }
+    } else {
+      const roll = Math.random();
+      if (roll > 0.82) {
+        type = 'BRUTE';
+      } else if (roll > 0.62) {
+        type = 'SHIELDER';
+      } else if (roll > 0.38) {
+        type = 'ARCHER';
+      } else if (roll > 0.20) {
+        type = 'RUSHER';
       }
     }
     this.enemies.push(
@@ -1129,6 +1149,7 @@ export class EnemyManager {
   }
 
   public setDifficulty(level: number) { this.difficulty = level; }
+  public setStage(stage: number) { this.currentStage = Math.max(1, Math.min(3, stage)); }
   public freezeAll() { this.enemies = []; }
   public isBossActive() { return this.bossActive; }
   public getArcherWarning() { return this.archerWarningTimer; }

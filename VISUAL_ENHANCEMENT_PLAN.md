@@ -184,3 +184,146 @@ Fix strategy:
 5. Build and run locally.
 6. Then split models/world props into modules in a separate cleanup pass.
 
+## Full Enhancement Roadmap
+
+### Phase 1: Story-First Game Loop
+
+Narrative goal: the player should understand that Baji Prabhu is holding a narrow pass so Shivaji Maharaj can reach Vishalgad. The player's mental model should be: "buy time, survive the surge, wait for the cannon signal."
+
+Files:
+
+- `game/Engine.ts`
+- `game/GameConfig.ts`
+- `components/HUD.tsx`
+- `localization/strings.ts`
+- `gameplay.md`
+
+Build:
+
+- Add explicit stage names and directives:
+  - Stage 1: Opening Hold — stop the scouting wave.
+  - Stage 2: Enemy Surge — archers and shield troops press the pass.
+  - Stage 3: Final Stand — elites and boss pressure arrive before the cannon signal.
+- Add a cannon-signal HUD with three pips tied to stage progress.
+- Add stage transition banners independent of wave banners.
+- Update `gameplay.md` so it matches the actual mode-based durations.
+
+Acceptance:
+
+- A new player should know what stage they are in and why it matters.
+- The game should feel like a story escalation, not only a countdown.
+
+### Phase 2: Tactical Readability
+
+Files:
+
+- `game/EnemyManager.ts`
+- `game/World.ts`
+- `components/Minimap.tsx`
+- `components/HUD.tsx`
+
+Build:
+
+- Use stage-specific enemy mixes instead of one general weighted table.
+- Stage 1 should be mostly melee/rusher training.
+- Stage 2 should introduce archer and shielder pressure.
+- Stage 3 should bring brutes, shielders, archers, and boss/elite pressure.
+- Improve minimap enemy icons by type.
+- Add clearer offscreen arrow danger indicators later.
+
+Acceptance:
+
+- The player should feel a difference between stages.
+- Enemy silhouettes, minimap icons, and HUD warnings should agree.
+
+### Phase 3: Hero Presentation
+
+Files:
+
+- `game/Player.ts`
+- `game/ModelParts.ts`
+- future: `game/models/HeroModel.ts`
+
+Build:
+
+- Add a visible Valor-ready aura around Baji.
+- Add shield/block visual glow when the dhal is actively protecting.
+- Add better stance changes:
+  - idle heroic stance
+  - shield stance
+  - attack lunge
+  - dodge burst
+- Later, split the model construction out of `Player.ts`.
+
+Acceptance:
+
+- The player can tell when Valor is ready without only looking at the bar.
+- Blocking should feel protective and powerful.
+
+### Phase 4: Environment Spectacle
+
+Files:
+
+- `game/World.ts`
+- `game/ModelParts.ts`
+- future: `game/models/EnvironmentModels.ts`
+
+Build:
+
+- Add stage-specific environmental intensity:
+  - Stage 1: misty dawn hold.
+  - Stage 2: smoke, torch lines, war flags.
+  - Stage 3: ember-heavy final stand with stronger red/gold lighting.
+- Add more battlefield storytelling props:
+  - abandoned palkhi/supply bundles
+  - fallen shields
+  - snapped banners
+  - cannon-signal vista toward Vishalgad
+- Keep gameplay blockers explicit and fair.
+
+Acceptance:
+
+- The battlefield should become more dramatic as the player approaches the end.
+- Props should never lie about collision.
+
+### Phase 5: Model Pipeline Decision
+
+Files:
+
+- `package.json`
+- `game/ModelParts.ts`
+- future: `game/assets.ts`
+
+Build:
+
+- Decide whether to keep procedural low-poly models or add GLTF/GLB support.
+- If GLTF is introduced:
+  - use `GLTFLoader`
+  - keep procedural fallbacks
+  - define asset scale/origin rules
+  - keep mobile performance budget
+
+Acceptance:
+
+- Models should improve without making the game fragile or slow.
+
+### Phase 6: Polish And QA
+
+Files:
+
+- all gameplay/render files
+- `README.md`
+- `gameplay.md`
+
+Build:
+
+- Fix doc mismatches.
+- Add bundle-splitting or chunk warning handling.
+- Add repeatable visual QA steps.
+- Add browser screenshot checks once tooling is stable.
+
+Acceptance:
+
+- `npm run build` passes.
+- Game runs locally.
+- Docs explain the actual mechanics.

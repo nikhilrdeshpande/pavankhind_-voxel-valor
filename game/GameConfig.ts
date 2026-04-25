@@ -43,6 +43,11 @@ export interface GameStats {
   nextWaveIn: number;
   stage: number;
   stageProgress: number;
+  stageName: string;
+  stageDirective: string;
+  stageBanner: string | null;
+  stageBannerTimer: number;
+  cannonSignals: number;
   recentPickup: {
     name: string;
     effect: string;

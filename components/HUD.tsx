@@ -17,6 +17,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
     objectiveProgress, objectiveTarget, objectiveTimer,
     tutorialStep, gameElapsed, waveBanner, waveBannerTimer,
     waveProgress, nextWaveIn, stage, stageProgress,
+    stageName, stageDirective, stageBanner, stageBannerTimer, cannonSignals,
     recentPickup, pickupToastTimer,
   } = stats;
 
@@ -200,7 +201,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
           <div className="w-44 self-end">
             <div className="flex justify-between text-[9px] uppercase tracking-[0.28em] text-orange-200/60">
               <span>Stage {stage}/3</span>
-              <span>{stage === 1 ? 'Opening' : stage === 2 ? 'Escalation' : 'Final Stand'}</span>
+              <span>{stageName}</span>
             </div>
             <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-black/50 border border-yellow-900/50">
               <div
@@ -210,6 +211,21 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
                   background: stage === 3 ? 'linear-gradient(90deg, #ef4444, #facc15)' : 'linear-gradient(90deg, #f59e0b, #fde68a)',
                 }}
               />
+            </div>
+            <div className="mt-1 text-[9px] uppercase tracking-[0.2em] text-yellow-100/55">
+              {stageDirective}
+            </div>
+            <div className="mt-2 flex justify-end gap-1.5">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="h-2.5 w-2.5 rounded-full" style={{
+                  background: i < cannonSignals ? '#fde68a' : 'rgba(0,0,0,0.55)',
+                  border: i < cannonSignals ? '1px solid rgba(253,230,138,0.9)' : '1px solid rgba(253,186,116,0.3)',
+                  boxShadow: i < cannonSignals ? '0 0 10px rgba(253,230,138,0.65)' : 'none',
+                }} />
+              ))}
+            </div>
+            <div className="mt-1 text-[8px] uppercase tracking-[0.24em] text-orange-100/45">
+              Cannon signal {cannonSignals}/3
             </div>
           </div>
         )}
@@ -408,6 +424,24 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
             )}
             <div className={`mt-3 ${isMobile ? 'text-xs' : 'text-sm'} uppercase tracking-[0.35em] text-yellow-100/65`}>
               {stage === 1 ? 'Opening Hold' : stage === 2 ? 'Enemy Surge' : 'Final Stand'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {stageBannerTimer > 0 && stageBanner && (
+        <div className="absolute inset-0 flex items-center justify-center z-[25] pointer-events-none" style={{
+          opacity: stageBannerTimer > 2.8 ? (3.6 - stageBannerTimer) * 1.25 : stageBannerTimer > 0.6 ? 1 : stageBannerTimer * 1.6,
+        }}>
+          <div className="text-center">
+            <div className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-black uppercase tracking-[0.2em]`} style={{
+              color: stage === 3 ? '#fecaca' : '#fde68a',
+              textShadow: stage === 3 ? '0 0 28px rgba(239,68,68,0.55)' : '0 0 24px rgba(245,158,11,0.45)',
+            }}>
+              {stageBanner}
+            </div>
+            <div className={`mt-2 ${isMobile ? 'text-xs' : 'text-sm'} uppercase tracking-[0.32em] text-orange-100/70`}>
+              {stageDirective}
             </div>
           </div>
         </div>

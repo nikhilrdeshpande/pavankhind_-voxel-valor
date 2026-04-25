@@ -186,3 +186,56 @@ Build passed. The local dev server responded with HTTP 200 at:
 ```text
 http://127.0.0.1:5173/
 ```
+
+## 2026-04-25 Story And Stage Identity Pass
+
+Expanded `VISUAL_ENHANCEMENT_PLAN.md` into a fuller phase-by-phase roadmap covering:
+
+- story-first game loop
+- tactical readability
+- hero presentation
+- environment spectacle
+- model pipeline decision
+- polish and QA
+
+Implemented the next high-impact slice:
+
+- Added stage names and directives to runtime stats:
+  - Opening Hold
+  - Enemy Surge
+  - Final Stand
+- Added stage transition banners separate from 30-second round banners.
+- Added a three-pip cannon signal HUD so the player has a story-facing sense of progress toward Vishalgad.
+- Added stage-based enemy mix logic:
+  - Stage 1: mostly melee and rushers.
+  - Stage 2: more archers and shielders.
+  - Stage 3: heavier pressure with brutes, shielders, archers, and rushers.
+- Increased later-stage enemy pressure slightly through max enemy count and spawn cadence.
+- Added a Valor-ready aura around Baji so ultimate readiness is visible in the 3D scene.
+- Added dhal/shield glow while blocking so defense has clearer visual feedback.
+- Fixed `App.tsx` default stats to include the newer pickup and stage fields.
+- Updated `gameplay.md` so it matches the current mode durations, stage system, and cannon signal HUD.
+
+Verification:
+
+```bash
+npm run build
+npx tsc --noEmit
+curl -I http://127.0.0.1:5173/
+```
+
+All checks passed. The only remaining build warning is the existing Vite large-bundle warning.
+
+### Relook Fixes
+
+After screenshot-based visual QA, two issues were found and fixed:
+
+- Stage and round banners could overlap because stage boundaries often happen on the same timing as 30-second round transitions. Stage banners now take priority and suppress the round banner while active.
+- The playable lane had a large hard dark rectangle caused by the directional light's default shadow camera bounds. The shadow camera now has battlefield-sized bounds and bias, and large cliff walls no longer cast broad shadows across the whole lane. The lane remains cinematic but is more readable.
+
+Visual smoke test:
+
+- Entered the game through the start screen and mode select using Playwright.
+- Captured gameplay screenshots.
+- Confirmed no page errors other than the expected headless-browser pointer-lock limitation.
+- Confirmed the stage HUD and `Opening Hold` banner render.
