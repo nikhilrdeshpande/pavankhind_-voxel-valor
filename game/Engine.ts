@@ -13,6 +13,8 @@ import type { GameConfig, GameStats } from './GameConfig';
 import { GAME_MODES } from './GameConfig';
 import { loadCosmeticState, getEquippedSwordSkin, getEquippedAngarkhaSkin, getEquippedShieldSkin } from './Cosmetics';
 import { ParticlePool } from './ParticlePool';
+import { updateTransientVfx, clearTransientVfx } from './TransientVfx';
+import { disposeSceneGraph } from './DisposeUtils';
 
 export type { GameStats } from './GameConfig';
 export { GAME_MODES } from './GameConfig';
@@ -235,7 +237,13 @@ export class PavankhindEngine {
     this.renderer.toneMappingExposure = 1.8;
 
     this.clock = new THREE.Clock();
-    this.audioManager = new AudioManager(this.camera);
+    try {
+      this.audioManager = new AudioManager(this.camera);
+    } catch (err) {
+      // Web Audio unavailable — run the game silent rather than crash
+      console.warn('[Engine] audio unavailable, running silent:', err);
+      this.audioManager = new Proxy({}, { get: () => () => {} }) as unknown as AudioManager;
+    }
     this.inputManager = new InputManager();
     if (this.isMobile) {
       this.inputManager.setVirtualMode(true);
@@ -591,6 +599,7 @@ export class PavankhindEngine {
 
     // Particle pool update
     this.particlePool.update(delta);
+    updateTransientVfx(delta);
 
     // Dynamic FOV
     this.updateDynamicFOV(delta);
@@ -924,6 +933,7 @@ export class PavankhindEngine {
   public dispose() {
     if (this.frameId) cancelAnimationFrame(this.frameId);
     window.removeEventListener('resize', this.boundResize);
+    clearTransientVfx();
     this.inputManager.dispose();
     this.audioManager.stopCombatDhol();
     this.audioManager.stopIntroMusic();
@@ -931,6 +941,12 @@ export class PavankhindEngine {
     this.audioManager.stopAmbientSounds();
     this.audioManager.stopHeartbeat();
     this.audioManager.stopTanpuraDrone();
+    // NOTE: the AudioContext itself is a THREE singleton shared across Engine
+    // instances — do not close() it or the next run plays silent.
+    EnemyManager.resetStatics();
+    // Free all GPU resources (geometries, materials, textures) so rapid
+    // "Play Again" remounts don't accumulate abandoned scene graphs.
+    disposeSceneGraph(this.scene);
     if (this.composer) {
       this.composer.dispose();
     }

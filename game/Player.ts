@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { InputManager } from './InputManager';
 import { AudioManager } from './AudioManager';
 import { createClothPanel, createMarathaDhal } from './ModelParts';
+import { spawnTransientVfx } from './TransientVfx';
 
 export class Player {
   private mesh: THREE.Group;
@@ -1455,21 +1456,10 @@ export class Player {
     ring.position.copy(this.mesh.position);
     ring.position.y = 1.5;
     ring.lookAt(this.camera.position);
-    this.scene.add(ring);
-    // Animate and remove
-    let life = 0.2;
-    const animate = () => {
-      life -= 0.016;
-      const t = life / 0.2;
+    spawnTransientVfx(this.scene, [ring], 0.2, (t) => {
       ring.scale.setScalar(1 + (1 - t) * 3);
       (ring.material as THREE.MeshBasicMaterial).opacity = t * 0.9;
-      if (life > 0) {
-        requestAnimationFrame(animate);
-      } else {
-        this.scene.remove(ring);
-      }
-    };
-    requestAnimationFrame(animate);
+    });
   }
 
   private spawnDodgeBurst() {
@@ -1485,21 +1475,10 @@ export class Player {
     }));
     ring.position.copy(this.mesh.position);
     ring.position.y = 0.08;
-    this.scene.add(ring);
-
-    let life = 0.28;
-    const animate = () => {
-      life -= 0.016;
-      const t = Math.max(0, life / 0.28);
+    spawnTransientVfx(this.scene, [ring], 0.28, (t) => {
       ring.scale.setScalar(1 + (1 - t) * 1.8);
       (ring.material as THREE.MeshBasicMaterial).opacity = t * 0.55;
-      if (life > 0) {
-        requestAnimationFrame(animate);
-      } else {
-        this.scene.remove(ring);
-      }
-    };
-    requestAnimationFrame(animate);
+    });
   }
 
   public restore(h: number, s: number) {

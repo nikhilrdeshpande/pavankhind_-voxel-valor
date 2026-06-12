@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Player } from './Player';
 import { AudioManager } from './AudioManager';
 import { createClothPanel, createMarathaDhal } from './ModelParts';
+import { spawnTransientVfx } from './TransientVfx';
 
 type EnemyType = 'STANDARD' | 'RUSHER' | 'SHIELDER' | 'ARCHER' | 'BRUTE' | 'BOSS';
 
@@ -548,12 +549,13 @@ class Enemy {
       this.bossPhase2 = true;
       this.speed *= 1.4;
       // Phase 2 eye color change to red + point light
+      const redMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 3.0 });
       if (this.bossEyeLeft) {
-        const redMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 3.0 });
+        (this.bossEyeLeft.material as THREE.Material).dispose();
         this.bossEyeLeft.material = redMat;
       }
       if (this.bossEyeRight) {
-        const redMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 3.0 });
+        (this.bossEyeRight.material as THREE.Material).dispose();
         this.bossEyeRight.material = redMat;
       }
       if (!this.bossEyeLight) {
@@ -909,28 +911,19 @@ class Enemy {
       shard.position.y += 1.0 + Math.random() * 0.5;
       shard.position.x += (Math.random() - 0.5) * 0.5;
       shard.position.z += (Math.random() - 0.5) * 0.5;
-      this.scene.add(shard);
       const spread = this.type === 'BOSS' ? 6 : 4;
       const vel = new THREE.Vector3(
         (Math.random() - 0.5) * spread,
         2 + Math.random() * 4,
         (Math.random() - 0.5) * spread
       );
-      let life = 0.6;
-      const animateDebris = () => {
-        life -= 0.016;
-        shard.position.addScaledVector(vel, 0.016);
-        vel.y -= 15 * 0.016;
-        shard.rotation.x += 0.1;
-        shard.rotation.z += 0.15;
-        shard.scale.multiplyScalar(0.97);
-        if (life > 0) {
-          requestAnimationFrame(animateDebris);
-        } else {
-          this.scene.remove(shard);
-        }
-      };
-      requestAnimationFrame(animateDebris);
+      spawnTransientVfx(this.scene, [shard], 0.6, (_t, dt) => {
+        shard.position.addScaledVector(vel, dt);
+        vel.y -= 15 * dt;
+        shard.rotation.x += 6 * dt;
+        shard.rotation.z += 9 * dt;
+        shard.scale.multiplyScalar(Math.pow(0.16, dt));
+      });
     }
 
     // Soul wisp — rising golden sphere
@@ -946,22 +939,13 @@ class Enemy {
       wisp.position.copy(this.mesh.position);
       wisp.position.y += 1.2;
       wisp.position.x += (Math.random() - 0.5) * 0.5;
-      this.scene.add(wisp);
       const startY = wisp.position.y;
-      let wLife = 0.6;
-      const animateWisp = () => {
-        wLife -= 0.016;
-        const t = 1 - wLife / 0.6;
-        wisp.position.y = startY + t * 3;
-        wisp.scale.setScalar(1 - t);
-        (wisp.material as THREE.MeshBasicMaterial).opacity = (1 - t) * 0.8;
-        if (wLife > 0) {
-          requestAnimationFrame(animateWisp);
-        } else {
-          this.scene.remove(wisp);
-        }
-      };
-      requestAnimationFrame(animateWisp);
+      spawnTransientVfx(this.scene, [wisp], 0.6, (t) => {
+        const prog = 1 - t;
+        wisp.position.y = startY + prog * 3;
+        wisp.scale.setScalar(Math.max(0.001, t));
+        (wisp.material as THREE.MeshBasicMaterial).opacity = t * 0.8;
+      });
     }
 
     // Haptic feedback on mobile
@@ -1029,6 +1013,11 @@ export class EnemyManager {
   private valorColumns: ValorColumn[] = [];
   private valorShockwaves: ValorShockwave[] = [];
   private static arrows: Arrow[] = [];
+
+  /** Clear cross-instance state so a new game doesn't inherit live arrows. */
+  public static resetStatics() {
+    EnemyManager.arrows = [];
+  }
   private static arrowBlockers: { x: number; z: number; radius: number }[] = [];
   private bossActive = false;
   private archerWarningTimer = 0;
@@ -1475,19 +1464,10 @@ class Arrow {
       new THREE.MeshBasicMaterial({ color: 0xffcc66, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending })
     );
     spark.position.copy(this.mesh.position);
-    this.scene.add(spark);
-    let life = 0.18;
-    const animate = () => {
-      life -= 0.016;
-      spark.scale.setScalar(1 + (0.18 - life) * 8);
-      (spark.material as THREE.MeshBasicMaterial).opacity = Math.max(0, life / 0.18);
-      if (life > 0) {
-        requestAnimationFrame(animate);
-      } else {
-        this.scene.remove(spark);
-      }
-    };
-    requestAnimationFrame(animate);
+    spawnTransientVfx(this.scene, [spark], 0.18, (t) => {
+      spark.scale.setScalar(1 + (1 - t) * 1.44);
+      (spark.material as THREE.MeshBasicMaterial).opacity = t;
+    });
   }
 
   private spawnDeflectImpact() {
@@ -1505,7 +1485,6 @@ class Arrow {
     );
     ring.position.copy(this.mesh.position);
     ring.lookAt(this.player.getCameraPosition());
-    this.scene.add(ring);
 
     const sparkMat = new THREE.MeshBasicMaterial({
       color: 0xfff4b8,
@@ -1519,31 +1498,20 @@ class Arrow {
       const spark = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.28), sparkMat);
       spark.position.copy(this.mesh.position);
       spark.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-      this.scene.add(spark);
       sparks.push(spark);
     }
 
-    let life = 0.22;
-    const animate = () => {
-      life -= 0.016;
-      const t = Math.max(0, life / 0.22);
+    spawnTransientVfx(this.scene, [ring, ...sparks], 0.22, (t, dt) => {
       ring.scale.setScalar(1 + (1 - t) * 2.4);
       (ring.material as THREE.MeshBasicMaterial).opacity = t * 0.9;
       sparks.forEach((spark, i) => {
         const angle = (i / sparks.length) * Math.PI * 2;
-        spark.position.x += Math.cos(angle) * 0.09;
-        spark.position.y += 0.035;
-        spark.position.z += Math.sin(angle) * 0.09;
+        spark.position.x += Math.cos(angle) * 5.4 * dt;
+        spark.position.y += 2.1 * dt;
+        spark.position.z += Math.sin(angle) * 5.4 * dt;
         (spark.material as THREE.MeshBasicMaterial).opacity = t * 0.95;
       });
-      if (life > 0) {
-        requestAnimationFrame(animate);
-      } else {
-        this.scene.remove(ring);
-        sparks.forEach(spark => this.scene.remove(spark));
-      }
-    };
-    requestAnimationFrame(animate);
+    });
   }
 }
 

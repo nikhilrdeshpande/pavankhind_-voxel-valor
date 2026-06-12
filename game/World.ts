@@ -41,6 +41,8 @@ export class World {
   // Falling leaves
   private leafMeshes: { mesh: THREE.Mesh; vel: THREE.Vector3; rotSpeed: THREE.Vector3; life: number }[] = [];
   private leafTimer = 0;
+  private leafGeo: THREE.PlaneGeometry | null = null;
+  private leafMats: THREE.MeshBasicMaterial[] = [];
 
   // Flags
   private flags: { mesh: THREE.Mesh; phase: number }[] = [];
@@ -1154,15 +1156,17 @@ this.scene.add(rimLight);
       this.fireflyMesh.instanceMatrix.needsUpdate = true;
     }
 
-    // Falling leaves
+    // Falling leaves — shared geometry/materials, reused across all leaves
     this.leafTimer -= delta;
     if (this.leafTimer <= 0 && this.leafMeshes.length < 10) {
       this.leafTimer = 1 + Math.random() * 2;
-      const leafMat = new THREE.MeshBasicMaterial({
-        color: Math.random() > 0.5 ? 0x8a6a30 : 0x5a7a2a,
-        transparent: true, opacity: 0.7, side: THREE.DoubleSide,
-      });
-      const leaf = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.25), leafMat);
+      if (!this.leafGeo) {
+        this.leafGeo = new THREE.PlaneGeometry(0.4, 0.25);
+        this.leafMats = [0x8a6a30, 0x5a7a2a].map(color => new THREE.MeshBasicMaterial({
+          color, transparent: true, opacity: 0.7, side: THREE.DoubleSide,
+        }));
+      }
+      const leaf = new THREE.Mesh(this.leafGeo, this.leafMats[Math.random() > 0.5 ? 0 : 1]);
       const side = Math.random() > 0.5 ? 1 : -1;
       leaf.position.set(
         playerPos.x + side * (25 + Math.random() * 10),
