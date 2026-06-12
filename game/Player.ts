@@ -23,6 +23,10 @@ export class Player {
   private staminaRegenMultiplier = 1;
   private valorGainMultiplier = 1;
   private moveSpeedMultiplier = 1;
+  private killHeal = 0;
+  private damageTakenMultiplier = 1;
+  private dodgeCooldownScale = 1;
+  private comboWindow = 2.0;
   private slowmoTimer = 0;
   private slowmoFactor = 0.35;
   private valorStrikeQueued = false;
@@ -44,6 +48,8 @@ export class Player {
   private hitStopTimer = 0;
   private swingSide = 1;
   private swingHitEnemy = false;
+  private swingCount = 0;
+  private heavySwing = false;
   private parryTimer = 0;
   private wasBlockingInput = false;
   private dodgeTimer = 0;
@@ -633,7 +639,7 @@ export class Player {
     this.trailMesh.visible = totalFrames > 1;
     // Combo boost: brighter trail at 5+ combo
     const trailMat = this.trailMesh.material as THREE.ShaderMaterial;
-    trailMat.uniforms.uComboBoost.value = this.comboCount >= 5 ? 1.5 : 1.0;
+    trailMat.uniforms.uComboBoost.value = this.heavySwing ? 2.0 : this.comboCount >= 5 ? 1.5 : 1.0;
   }
 
   public applySwordSkin(bladeColor: number, guardColor: number, emissive?: number) {
@@ -835,7 +841,7 @@ export class Player {
     this.cameraShake = isLethal ? 1.2 : 0.6;
     this.swingHitEnemy = true;
     this.comboCount++;
-    this.comboTimer = 2.0;
+    this.comboTimer = this.comboWindow;
     this.maxCombo = Math.max(this.maxCombo, this.comboCount);
     this.rage = Math.min(100, this.rage + (isLethal ? 18 : 8) * this.valorGainMultiplier);
 
@@ -897,7 +903,7 @@ export class Player {
     const wantsDodge = isActive && this.input.keys[' '] && this.dodgeCooldown <= 0 && this.stamina > 20;
     if (wantsDodge) {
       this.dodgeTimer = 0.25;
-      this.dodgeCooldown = 0.6;
+      this.dodgeCooldown = 0.6 * this.dodgeCooldownScale;
       this.dodgeCount++;
       this.stamina -= 20;
       // Dodge in camera-relative direction
@@ -996,22 +1002,28 @@ export class Player {
       this.swingTimer = 0;
       this.swingSide *= -1;
       this.swingHitEnemy = false;
-      this.attackLungeTimer = 0.14;
+      this.swingCount++;
+      // Every 3rd swing while in a combo becomes a heavy strike: more damage,
+      // smashes through Shielder guards, bigger lunge.
+      this.heavySwing = this.comboCount >= 2 && this.swingCount % 3 === 0;
+      this.attackLungeTimer = this.heavySwing ? 0.2 : 0.14;
       this.faceCombatTarget(delta, 1);
-      this.stamina -= 12;
-      this.audio.playBreath(0.6);
+      this.stamina -= this.heavySwing ? 16 : 12;
+      this.audio.playBreath(this.heavySwing ? 1.1 : 0.6);
+      if (this.heavySwing) this.cameraShake = Math.max(this.cameraShake, 0.25);
     }
 
     if (this.swingPhase !== 'IDLE') {
       this.swingTimer += delta * comboMod;
       this.faceCombatTarget(delta, this.swingPhase === 'STRIKE' ? 1.15 : 0.65);
+      const heavyAmp = this.heavySwing ? 1.25 : 1;
       if (this.swingPhase === 'WINDUP') {
-        rArm.rotation.x = THREE.MathUtils.lerp(rArm.rotation.x, Math.PI / 2.2, delta * 30 * comboMod);
-        rArm.rotation.z = THREE.MathUtils.lerp(rArm.rotation.z, this.swingSide * 0.8, delta * 25 * comboMod);
-        if (this.swingTimer > 0.07) { this.swingPhase = 'STRIKE'; this.swingTimer = 0; this.audio.playSwordSwing(); }
+        rArm.rotation.x = THREE.MathUtils.lerp(rArm.rotation.x, (Math.PI / 2.2) * heavyAmp, delta * 30 * comboMod);
+        rArm.rotation.z = THREE.MathUtils.lerp(rArm.rotation.z, this.swingSide * 0.8 * heavyAmp, delta * 25 * comboMod);
+        if (this.swingTimer > (this.heavySwing ? 0.1 : 0.07)) { this.swingPhase = 'STRIKE'; this.swingTimer = 0; this.audio.playSwordSwing(); }
       } else if (this.swingPhase === 'STRIKE') {
-        rArm.rotation.x = THREE.MathUtils.lerp(rArm.rotation.x, -Math.PI / 1.2, delta * 65 * comboMod);
-        rArm.rotation.z = THREE.MathUtils.lerp(rArm.rotation.z, -this.swingSide * 0.5, delta * 45 * comboMod);
+        rArm.rotation.x = THREE.MathUtils.lerp(rArm.rotation.x, (-Math.PI / 1.2) * heavyAmp, delta * 65 * comboMod);
+        rArm.rotation.z = THREE.MathUtils.lerp(rArm.rotation.z, -this.swingSide * 0.5 * heavyAmp, delta * 45 * comboMod);
         this.applyAttackLunge(delta);
         if (this.swingTimer > 0.09) { this.swingPhase = 'RECOVERY'; this.swingTimer = 0; }
       } else if (this.swingPhase === 'RECOVERY') {
@@ -1393,7 +1405,7 @@ export class Player {
       return;
     }
     // Blocks 90% of incoming damage
-    const finalAmount = this.isBlocking ? amount * 0.1 : amount;
+    const finalAmount = (this.isBlocking ? amount * 0.1 : amount) * this.damageTakenMultiplier;
     this.health -= finalAmount;
     this.damageTaken += finalAmount;
 
@@ -1532,7 +1544,15 @@ export class Player {
     this.audio.playSwordClash();
     return true;
   }
-  public getAttackPower() { return 120 * (1 + (this.weaponLevel - 1) * 0.15) * this.attackMultiplier; }
+  public getAttackPower() { return 120 * (1 + (this.weaponLevel - 1) * 0.15) * this.attackMultiplier * (this.heavySwing ? 1.8 : 1); }
+  public isHeavyStrike() { return this.heavySwing && this.swingPhase === 'STRIKE'; }
+  public onEnemyKilled() {
+    if (this.killHeal > 0) this.health = Math.min(100, this.health + this.killHeal);
+  }
+  public triggerVictorySlowmo() {
+    this.slowmoTimer = 1.8;
+    this.slowmoFactor = 0.25;
+  }
   public getComboCount() { return this.comboCount; }
   public getRage() { return this.rage; }
   public getMaxCombo() { return this.maxCombo; }
@@ -1560,6 +1580,14 @@ export class Player {
       this.valorGainMultiplier = Math.min(2.0, this.valorGainMultiplier + 0.3);
     } else if (id === 'stride') {
       this.moveSpeedMultiplier = Math.min(1.4, this.moveSpeedMultiplier + 0.2);
+    } else if (id === 'bloodlust') {
+      this.killHeal = Math.min(6, this.killHeal + 3);
+    } else if (id === 'aegis') {
+      this.damageTakenMultiplier = Math.max(0.7, this.damageTakenMultiplier - 0.12);
+    } else if (id === 'swift') {
+      this.dodgeCooldownScale = Math.max(0.45, this.dodgeCooldownScale - 0.3);
+    } else if (id === 'focus') {
+      this.comboWindow = Math.min(4.0, this.comboWindow + 1.0);
     }
   }
   private isDead = false;

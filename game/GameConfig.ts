@@ -54,6 +54,9 @@ export interface GameStats {
     color: string;
   } | null;
   pickupToastTimer: number;
+  killStreak: number;
+  streakBanner: 'rampage' | 'unstoppable' | 'legendary' | null;
+  streakBannerTimer: number;
 }
 
 export const GAME_MODES: Record<string, GameConfig> = {

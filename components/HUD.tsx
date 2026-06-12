@@ -19,6 +19,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
     waveProgress, nextWaveIn, stage, stageProgress,
     stageName, stageDirective, stageBanner, stageBannerTimer, cannonSignals,
     recentPickup, pickupToastTimer,
+    killStreak, streakBanner, streakBannerTimer,
   } = stats;
 
   const prevScoreRef = useRef(score);
@@ -442,6 +443,26 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
             </div>
             <div className={`mt-2 ${isMobile ? 'text-xs' : 'text-sm'} uppercase tracking-[0.32em] text-orange-100/70`}>
               {stageDirective}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Kill Streak Banner ── */}
+      {streakBannerTimer > 0 && streakBanner && (
+        <div className="absolute top-[22%] left-1/2 -translate-x-1/2 z-[28] pointer-events-none" style={{
+          opacity: streakBannerTimer > 1.8 ? (2.2 - streakBannerTimer) * 2.5 : streakBannerTimer > 0.4 ? 1 : streakBannerTimer * 2.5,
+          transform: `translateX(-50%) scale(${streakBannerTimer > 1.8 ? 1.3 - (streakBannerTimer - 1.8) * 0.5 : 1})`,
+        }}>
+          <div className="text-center">
+            <div className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-black uppercase tracking-[0.25em]`} style={{
+              color: streakBanner === 'legendary' ? '#c084fc' : streakBanner === 'unstoppable' ? '#f87171' : '#fb923c',
+              textShadow: '0 0 26px rgba(239,68,68,0.6)',
+            }}>
+              {(t as any).streaks?.[streakBanner] ?? streakBanner}
+            </div>
+            <div className={`mt-1 ${isMobile ? 'text-xs' : 'text-sm'} font-bold uppercase tracking-[0.4em] text-orange-100/80`}>
+              {killStreak} ⚔
             </div>
           </div>
         </div>

@@ -68,6 +68,21 @@ export const strings = {
       onslaught: "आक्रमण",
       mythic: "अद्भुत",
     },
+    streaks: {
+      rampage: "रणकंदन",
+      unstoppable: "अजिंक्य",
+      legendary: "दंतकथा",
+    },
+    perks: {
+      blade: { name: "भवानीची तलवार", desc: "+२०% तलवार नुकसान" },
+      spirit: { name: "पोलादी मन", desc: "+४०% उत्साह पुनर्भरण, +१५ प्राण, +३५ उत्साह" },
+      valor: { name: "रणगर्जना", desc: "+३०% पराक्रम वाढ" },
+      stride: { name: "वाऱ्याची चाल", desc: "+२०% वेग" },
+      bloodlust: { name: "रुद्राची तहान", desc: "प्रत्येक वधाने ३ प्राण परत" },
+      aegis: { name: "कातळ कवच", desc: "१२% कमी नुकसान" },
+      swift: { name: "ससाण्याची झेप", desc: "चकवा ३०% लवकर सज्ज" },
+      focus: { name: "रणधैर्य", desc: "कॉम्बो वेळ +१ सेकंद" },
+    },
     scorecard: {
       kingSafe: "महाराज सुरक्षित",
       bajiFallen: "बाजीप्रभू पडले",
@@ -185,6 +200,21 @@ export const strings = {
       fury: "FURY",
       onslaught: "ONSLAUGHT",
       mythic: "MYTHIC",
+    },
+    streaks: {
+      rampage: "RAMPAGE",
+      unstoppable: "UNSTOPPABLE",
+      legendary: "LEGENDARY",
+    },
+    perks: {
+      blade: { name: "Blade of Bhavani", desc: "+20% sword damage" },
+      spirit: { name: "Steel Spirit", desc: "+40% stamina regen, +15 health, +35 stamina" },
+      valor: { name: "War Cry", desc: "+30% Valor gained from hits and parries" },
+      stride: { name: "Wind Stride", desc: "+20% movement speed" },
+      bloodlust: { name: "Rudra's Thirst", desc: "Each kill restores 3 health" },
+      aegis: { name: "Stone Armor", desc: "Take 12% less damage" },
+      swift: { name: "Falcon Step", desc: "Dodge recovers 30% sooner" },
+      focus: { name: "Battle Focus", desc: "Combo window lasts 1s longer" },
     },
     scorecard: {
       kingSafe: "The King is Safe",

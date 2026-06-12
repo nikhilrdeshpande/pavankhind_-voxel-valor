@@ -180,6 +180,18 @@ export class PavankhindEngine {
   private deathTimer = 0;
   private proximityCheckTimer = 0;
 
+  // Victory slow-mo sequence
+  private winSequenceActive = false;
+  private winTimer = 0;
+  private endReported = false; // guard: onWin/onLoss must fire exactly once
+
+  // Kill streaks
+  private killStreak = 0;
+  private streakTimer = 0;
+  private streakBanner: 'rampage' | 'unstoppable' | 'legendary' | null = null;
+  private streakBannerTimer = 0;
+  private lastStreakTier = 0;
+
   // Tutorial + wave banner + timing
   private tutorialStep = 0;
   private gameElapsed = 0;
@@ -247,6 +259,8 @@ export class PavankhindEngine {
     this.enemyManager = new EnemyManager(this.scene, this.player, this.audioManager, (points) => {
         this.score += points;
         this.enemyManager.setDifficulty(Math.floor(this.score / 5));
+        this.player.onEnemyKilled();
+        this.registerKillStreak();
     }, this.camera);
     this.enemyManager.setArrowBlockers(this.world.getArrowBlockers());
     this.enemyManager.setDifficulty(Math.max(0, (this.config.startWave - 1) * 2));
@@ -380,7 +394,8 @@ export class PavankhindEngine {
         this.vignettePass.uniforms.uDesaturate.value = Math.min(0.8, this.vignettePass.uniforms.uDesaturate.value + rawDelta * 0.4);
         this.vignettePass.uniforms.uVignetteStrength.value = Math.min(0.5, this.vignettePass.uniforms.uVignetteStrength.value + rawDelta * 0.2);
       }
-      if (this.deathTimer <= 0) {
+      if (this.deathTimer <= 0 && !this.endReported) {
+        this.endReported = true;
         this.callbacks.onLoss();
       }
       return;
@@ -570,6 +585,16 @@ export class PavankhindEngine {
     if (this.tutorialStep === 3 && this.player.getBlockCount() > 0) this.tutorialStep = 4;
     if (this.tutorialStep === 4 && this.player.getDodgeCount() > 0) this.tutorialStep = 5;
 
+    // Kill streak decay
+    if (this.streakTimer > 0) {
+      this.streakTimer -= delta;
+      if (this.streakTimer <= 0) {
+        this.killStreak = 0;
+        this.lastStreakTier = 0;
+      }
+    }
+    if (this.streakBannerTimer > 0) this.streakBannerTimer -= delta;
+
     // Wave transition banner + wave-end healing
     if (this.wave > this.prevWave && this.prevWave > 0) {
       this.waveBannerTimer = 3.0;
@@ -642,6 +667,9 @@ export class PavankhindEngine {
       cannonSignals,
       recentPickup: this.pickupToast,
       pickupToastTimer: this.pickupToastTimer,
+      killStreak: this.killStreak,
+      streakBanner: this.streakBannerTimer > 0 ? this.streakBanner : null,
+      streakBannerTimer: this.streakBannerTimer,
     });
 
     if (this.player.getHealth() <= 0 && !this.deathSequenceActive) {
@@ -652,11 +680,36 @@ export class PavankhindEngine {
       this.audioManager.stopHeartbeat();
       this.audioManager.playDeathRumble();
     }
-    if (this.gameTime <= 0) {
+    if (this.gameTime <= 0 && !this.winSequenceActive) {
+        // Victory: third cannon fires, brief slow-mo drama, then scorecard
+        this.winSequenceActive = true;
+        this.winTimer = 2.0;
+        this.player.triggerVictorySlowmo();
+        this.triggerScreenFlash();
         this.audioManager.playCannon();
         this.audioManager.playShankh();
-        this.callbacks.onWin();
     }
+    if (this.winSequenceActive) {
+        this.gameTime = 0; // freeze the clock during the win sequence
+        this.winTimer -= rawDelta;
+        if (this.winTimer <= 0 && !this.endReported) {
+            this.endReported = true;
+            this.callbacks.onWin();
+        }
+    }
+  }
+
+  private registerKillStreak() {
+    this.killStreak++;
+    this.streakTimer = 4.0; // streak resets after 4s without a kill
+    const tier = this.killStreak >= 15 ? 3 : this.killStreak >= 10 ? 2 : this.killStreak >= 5 ? 1 : 0;
+    if (tier > this.lastStreakTier) {
+      this.streakBanner = tier === 3 ? 'legendary' : tier === 2 ? 'unstoppable' : 'rampage';
+      this.streakBannerTimer = 2.2;
+      this.audioManager.playDholAccent();
+      if (tier >= 2) this.audioManager.playWarCry();
+    }
+    this.lastStreakTier = tier;
   }
 
   private getStageInfo(stage: number) {

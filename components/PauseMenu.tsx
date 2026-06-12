@@ -8,6 +8,17 @@ interface PerkOption {
   desc: string;
 }
 
+const PERK_STYLE: Record<string, { color: string; icon: string }> = {
+  blade: { color: '#ef4444', icon: '⚔️' },
+  spirit: { color: '#3b82f6', icon: '💨' },
+  valor: { color: '#f97316', icon: '🔥' },
+  stride: { color: '#22c55e', icon: '👢' },
+  bloodlust: { color: '#dc2626', icon: '🩸' },
+  aegis: { color: '#a8a29e', icon: '🛡️' },
+  swift: { color: '#06b6d4', icon: '🦅' },
+  focus: { color: '#eab308', icon: '🎯' },
+};
+
 interface PauseMenuProps {
   t: Strings;
   paused: boolean;
@@ -50,11 +61,11 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
                   className={`bg-black/40 ${isMobile ? 'px-2 py-2' : 'px-4 py-6'} text-left text-orange-100 hover:bg-orange-500/20 transition-all`}
                   style={{
                     border: '1px solid rgba(249,115,22,0.5)',
-                    borderTop: `3px solid ${option.id === 'blade' ? '#ef4444' : option.id === 'spirit' ? '#3b82f6' : option.id === 'valor' ? '#f97316' : '#22c55e'}`,
+                    borderTop: `3px solid ${PERK_STYLE[option.id]?.color ?? '#22c55e'}`,
                   }}
                 >
                   <div className={`${isMobile ? 'text-[10px]' : 'text-sm'} uppercase tracking-[0.25em]`}>
-                    <span className="mr-1">{option.id === 'blade' ? '⚔️' : option.id === 'spirit' ? '💨' : option.id === 'valor' ? '🔥' : '👢'}</span>
+                    <span className="mr-1">{PERK_STYLE[option.id]?.icon ?? '⚔️'}</span>
                     {option.name}
                   </div>
                   <div className={`${isMobile ? 'mt-1 text-[9px]' : 'mt-3 text-xs'} uppercase tracking-[0.2em] text-orange-200/80`}>{option.desc}</div>

@@ -38,13 +38,19 @@ const defaultStats: GameStats = {
   stageName: 'Opening Hold', stageDirective: 'Stop the scouts. Hold the pass.',
   stageBanner: null, stageBannerTimer: 0, cannonSignals: 0,
   recentPickup: null, pickupToastTimer: 0,
+  killStreak: 0, streakBanner: null, streakBannerTimer: 0,
 };
 
-const perkOptions = [
-  { id: 'blade', name: 'Blade of Bhavani', desc: '+20% sword damage' },
-  { id: 'spirit', name: 'Steel Spirit', desc: '+40% stamina regen, +15 health, +35 stamina' },
-  { id: 'valor', name: 'War Cry', desc: '+30% Valor gained from hits and parries' },
-];
+const PERK_POOL = ['blade', 'spirit', 'valor', 'stride', 'bloodlust', 'aegis', 'swift', 'focus'];
+
+function rollPerkChoices(): string[] {
+  const pool = [...PERK_POOL];
+  const picks: string[] = [];
+  for (let i = 0; i < 3 && pool.length > 0; i++) {
+    picks.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  }
+  return picks;
+}
 
 const portraitMap: Record<string, string> = {
   "Shivaji Maharaj": "/shivaji-maharaj.png",
@@ -57,6 +63,7 @@ const App: React.FC = () => {
   const [stats, setStats] = useState<GameStats>(defaultStats);
   const [selectedModeKey, setSelectedModeKey] = useState<string>('skirmish');
   const [showPerkChoice, setShowPerkChoice] = useState(false);
+  const [offeredPerks, setOfferedPerks] = useState<string[]>(['blade', 'spirit', 'valor']);
   const [muted, setMuted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [showControls, setShowControls] = useState(false);
@@ -85,6 +92,8 @@ const App: React.FC = () => {
 
   const t = strings[lang];
   const storyDialogue = t.storyDialogue;
+  const perkStrings = t.perks as Record<string, { name: string; desc: string }>;
+  const perkOptions = offeredPerks.map(id => ({ id, ...perkStrings[id] }));
 
   const handleGameEnd = useCallback((result: 'WON' | 'LOST') => {
     const currentProfile = loadProfile();
@@ -213,10 +222,24 @@ const App: React.FC = () => {
   useEffect(() => {
     if (status !== 'PLAYING') return;
     if (stats.perkReady && !showPerkChoice) {
+      setOfferedPerks(rollPerkChoices());
       setPaused(true);
       setShowPerkChoice(true);
     }
   }, [stats.perkReady, showPerkChoice, status]);
+
+  // Auto-pause when the tab is hidden (alt-tab, phone lock, app switch)
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden && status === 'PLAYING') {
+        setPaused(true);
+        setShowControls(false);
+        setShowQuitConfirm(false);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [status]);
 
   const selectPerk = useCallback((id: string) => {
     engineRef.current?.applyPerk(id);

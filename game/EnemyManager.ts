@@ -693,7 +693,10 @@ class Enemy {
         const facingDot = forward.dot(toPlayer);
         if (this.shieldBrokenTimer <= 0 && facingDot > 0.4) {
           this.audio.playSwordClash();
-          this.shieldStamina -= 28;
+          // Heavy strikes smash through guards: triple guard damage + half-power hit
+          const heavy = this.player.isHeavyStrike();
+          this.shieldStamina -= heavy ? 84 : 28;
+          if (heavy) this.takeDamage(this.player.getAttackPower() * 0.5);
           if (this.shieldStamina <= 0) {
             this.shieldBrokenTimer = 2.0;
             this.shieldStamina = 0;
