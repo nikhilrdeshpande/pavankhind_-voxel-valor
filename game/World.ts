@@ -1361,33 +1361,62 @@ this.scene.add(rimLight);
     spawnGate(this.minZ - 20, enemyMat);
   }
 
+  // Pooled instanced meshes for reinforcement guards: 4 draw calls total
+  // instead of 2 per guard, and no per-spawn geometry/material allocation.
+  private reinforcePools: { body: THREE.InstancedMesh; spear: THREE.InstancedMesh; used: number; cap: number }[] = [];
+
   public spawnReinforcementLine(z: number) {
     if (this.reinforcementCount >= this.maxReinforcements) return;
-    const allyMat = new THREE.MeshStandardMaterial({ color: 0xd8c2a2, roughness: 0.9 });
-    const enemyMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.9 });
-    const bodyGeo = new THREE.CapsuleGeometry(0.42, 1.1, 4, 8);
-    const spearGeo = new THREE.CylinderGeometry(0.05, 0.05, 3.4, 6);
-    const spearMat = new THREE.MeshStandardMaterial({ color: 0x7a5b32, roughness: 0.8 });
 
-    const spawnSide = (side: number, mat: THREE.MeshStandardMaterial) => {
-      for (let i = 0; i < 4; i++) {
-        const guard = new THREE.Group();
-        const body = new THREE.Mesh(bodyGeo, mat);
-        body.position.y = 1.0;
-        guard.add(body);
-        const spear = new THREE.Mesh(spearGeo, spearMat);
-        spear.position.set(0.6 * side, 2.0, 0);
-        spear.rotation.z = side * 0.2;
-        guard.add(spear);
-        guard.position.set(side * 26, 0, z + i * 2.2);
-        guard.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
-        this.scene.add(guard);
+    if (this.reinforcePools.length === 0) {
+      const cap = Math.ceil(this.maxReinforcements / 2);
+      const bodyGeo = new THREE.CapsuleGeometry(0.42, 1.1, 4, 8);
+      const spearGeo = new THREE.CylinderGeometry(0.05, 0.05, 3.4, 6);
+      const spearMat = new THREE.MeshStandardMaterial({ color: 0x7a5b32, roughness: 0.8 });
+      for (const color of [0xd8c2a2, 0x2a2a2a]) { // ally, enemy
+        const body = new THREE.InstancedMesh(bodyGeo, new THREE.MeshStandardMaterial({ color, roughness: 0.9 }), cap);
+        const spear = new THREE.InstancedMesh(spearGeo, spearMat, cap);
+        body.count = 0;
+        spear.count = 0;
+        this.scene.add(body);
+        this.scene.add(spear);
+        this.reinforcePools.push({ body, spear, used: 0, cap });
+      }
+    }
+
+    const group = new THREE.Object3D();
+    const local = new THREE.Object3D();
+    const m = new THREE.Matrix4();
+
+    const placeSide = (side: number, pool: typeof this.reinforcePools[number]) => {
+      for (let i = 0; i < 4 && pool.used < pool.cap; i++) {
+        group.position.set(side * 26, 0, z + i * 2.2);
+        group.rotation.set(0, side > 0 ? -Math.PI / 2 : Math.PI / 2, 0);
+        group.updateMatrix();
+
+        local.position.set(0, 1.0, 0);
+        local.rotation.set(0, 0, 0);
+        local.updateMatrix();
+        m.multiplyMatrices(group.matrix, local.matrix);
+        pool.body.setMatrixAt(pool.used, m);
+
+        local.position.set(0.6 * side, 2.0, 0);
+        local.rotation.set(0, 0, side * 0.2);
+        local.updateMatrix();
+        m.multiplyMatrices(group.matrix, local.matrix);
+        pool.spear.setMatrixAt(pool.used, m);
+
+        pool.used++;
         this.reinforcementCount++;
       }
+      pool.body.count = pool.used;
+      pool.spear.count = pool.used;
+      pool.body.instanceMatrix.needsUpdate = true;
+      pool.spear.instanceMatrix.needsUpdate = true;
     };
 
-    spawnSide(-1, allyMat);
-    spawnSide(1, enemyMat);
+    placeSide(-1, this.reinforcePools[0]);
+    placeSide(1, this.reinforcePools[1]);
   }
 
   public spawnPowerup(z: number, kind: PowerupKind = this.pickPowerupKind()): THREE.Group {
