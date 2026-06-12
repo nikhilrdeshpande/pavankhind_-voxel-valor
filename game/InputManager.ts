@@ -79,7 +79,13 @@ export class InputManager {
   private lockTarget: HTMLElement | null = null;
   private boundLockHandler = () => {
     if (!document.pointerLockElement && this.lockTarget) {
-      this.lockTarget.requestPointerLock();
+      try {
+        // Returns a promise in modern Chrome; rejects if lock is unavailable
+        // (rapid re-lock after Esc, iframe restrictions) — never fatal.
+        (this.lockTarget.requestPointerLock() as Promise<void> | undefined)?.catch(() => {});
+      } catch {
+        // older browsers throw synchronously
+      }
     }
   };
 
