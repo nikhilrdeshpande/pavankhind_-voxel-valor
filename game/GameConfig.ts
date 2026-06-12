@@ -57,6 +57,7 @@ export interface GameStats {
   killStreak: number;
   streakBanner: 'rampage' | 'unstoppable' | 'legendary' | null;
   streakBannerTimer: number;
+  volleyWarning: number;
 }
 
 export const GAME_MODES: Record<string, GameConfig> = {

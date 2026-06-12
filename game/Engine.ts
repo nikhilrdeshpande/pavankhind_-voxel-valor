@@ -192,6 +192,13 @@ export class PavankhindEngine {
   private streakBannerTimer = 0;
   private lastStreakTier = 0;
 
+  // Arrow volley events: cliff archers rain arrows into marked zones (stage 2+)
+  private volleyTimer = 26;
+  private volleyWarnTimer = 0;
+  private volleyZones: { x: number; z: number; mesh: THREE.Mesh }[] = [];
+  private static readonly VOLLEY_RADIUS = 5;
+  private static readonly VOLLEY_WARN_DURATION = 1.6;
+
   // Tutorial + wave banner + timing
   private tutorialStep = 0;
   private gameElapsed = 0;
@@ -523,6 +530,22 @@ export class PavankhindEngine {
       }
     }
 
+    // Arrow volley event
+    if (currentStage >= 2 && !this.config.fogOfWar) {
+      if (this.volleyZones.length === 0) {
+        this.volleyTimer -= delta;
+        if (this.volleyTimer <= 0) this.startVolley();
+      } else {
+        this.volleyWarnTimer -= delta;
+        const pulse = 0.45 + Math.sin(this.gameElapsed * 14) * 0.25;
+        for (const zone of this.volleyZones) {
+          (zone.mesh.material as THREE.MeshBasicMaterial).opacity = pulse;
+          zone.mesh.scale.setScalar(1 + Math.sin(this.gameElapsed * 14) * 0.05);
+        }
+        if (this.volleyWarnTimer <= 0) this.resolveVolley();
+      }
+    }
+
     this.reinforceCooldown = Math.max(0, this.reinforceCooldown - delta);
     const playerZ = this.player.getPosition().z;
     if (Math.abs(playerZ - this.lastReinforceZ) > 120 && this.reinforceCooldown <= 0) {
@@ -670,6 +693,7 @@ export class PavankhindEngine {
       killStreak: this.killStreak,
       streakBanner: this.streakBannerTimer > 0 ? this.streakBanner : null,
       streakBannerTimer: this.streakBannerTimer,
+      volleyWarning: this.volleyZones.length > 0 ? this.volleyWarnTimer : 0,
     });
 
     if (this.player.getHealth() <= 0 && !this.deathSequenceActive) {
@@ -697,6 +721,54 @@ export class PavankhindEngine {
             this.callbacks.onWin();
         }
     }
+  }
+
+  private startVolley() {
+    const pPos = this.player.getPosition();
+    const ringGeo = new THREE.RingGeometry(PavankhindEngine.VOLLEY_RADIUS - 0.6, PavankhindEngine.VOLLEY_RADIUS, 40);
+    ringGeo.rotateX(-Math.PI / 2);
+    // One zone on the player, two offset — dodging out is always possible
+    const offsets = [
+      { x: 0, z: 0 },
+      { x: (Math.random() > 0.5 ? 1 : -1) * (6 + Math.random() * 5), z: (Math.random() - 0.5) * 10 },
+      { x: (Math.random() - 0.5) * 10, z: (Math.random() > 0.5 ? 1 : -1) * (6 + Math.random() * 5) },
+    ];
+    for (const off of offsets) {
+      const mat = new THREE.MeshBasicMaterial({
+        color: 0xff3322, transparent: true, opacity: 0.5,
+        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.Mesh(ringGeo.clone(), mat);
+      const x = Math.max(-19, Math.min(19, pPos.x + off.x));
+      const z = pPos.z + off.z;
+      mesh.position.set(x, 0.1, z);
+      this.scene.add(mesh);
+      this.volleyZones.push({ x, z, mesh });
+    }
+    ringGeo.dispose();
+    this.volleyWarnTimer = PavankhindEngine.VOLLEY_WARN_DURATION;
+    this.audioManager.playBowTwang();
+  }
+
+  private resolveVolley() {
+    const pPos = this.player.getPosition();
+    let playerHit = false;
+    for (const zone of this.volleyZones) {
+      const impactPos = new THREE.Vector3(zone.x, 0.3, zone.z);
+      this.particlePool.emit(20, impactPos, { x: 4.5, y: 5, z: 4.5 }, [0.25, 0.5], new THREE.Color(0x9a8466), [0.4, 0.9], 10);
+      const dx = pPos.x - zone.x;
+      const dz = pPos.z - zone.z;
+      if (dx * dx + dz * dz < PavankhindEngine.VOLLEY_RADIUS * PavankhindEngine.VOLLEY_RADIUS) {
+        playerHit = true;
+      }
+      this.scene.remove(zone.mesh);
+      zone.mesh.geometry.dispose();
+      (zone.mesh.material as THREE.Material).dispose();
+    }
+    this.volleyZones = [];
+    if (playerHit) this.player.takeDamage(18);
+    this.audioManager.playBruteSlam();
+    this.volleyTimer = 24 + Math.random() * 12;
   }
 
   private registerKillStreak() {

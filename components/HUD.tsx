@@ -20,6 +20,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
     stageName, stageDirective, stageBanner, stageBannerTimer, cannonSignals,
     recentPickup, pickupToastTimer,
     killStreak, streakBanner, streakBannerTimer,
+    volleyWarning,
   } = stats;
 
   const prevScoreRef = useRef(score);
@@ -444,6 +445,19 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
             <div className={`mt-2 ${isMobile ? 'text-xs' : 'text-sm'} uppercase tracking-[0.32em] text-orange-100/70`}>
               {stageDirective}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Arrow Volley Warning ── */}
+      {volleyWarning > 0 && (
+        <div className="absolute top-[14%] left-1/2 -translate-x-1/2 z-[29] pointer-events-none">
+          <div className={`px-5 py-2 ${isMobile ? 'text-sm' : 'text-lg'} font-black uppercase tracking-[0.2em] text-red-100`} style={{
+            background: 'rgba(127,29,29,0.75)',
+            border: '1px solid rgba(248,113,113,0.8)',
+            textShadow: '0 0 14px rgba(248,113,113,0.8)',
+          }}>
+            ⚠ {t.ui.volleyIncoming}
           </div>
         </div>
       )}
