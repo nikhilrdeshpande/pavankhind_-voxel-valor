@@ -265,7 +265,7 @@ const Scorecard: React.FC<ScorecardProps> = ({
                 onClick={onOpenStore}
                 className={`${isMobile ? 'px-5 py-3 text-sm' : 'px-8 py-4 text-sm'} border-2 border-yellow-700 text-yellow-300 hover:bg-yellow-950 font-bold uppercase tracking-widest`}
               >
-                Coin Shop
+                {t.ui.coinShop}
               </button>
               <button
                 onClick={onPlayAgain}

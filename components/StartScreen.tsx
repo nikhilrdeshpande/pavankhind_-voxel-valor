@@ -53,7 +53,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ t, isMobile, ensureIntroAudio
             </button>
             {!isMobile && (
               <div className="flex items-center gap-3 rounded border border-orange-400/40 px-4 py-3 text-xs uppercase tracking-[0.35em] text-orange-200/70">
-                Mouse to look, click to strike
+                {t.ui.desktopHint}
               </div>
             )}
           </div>

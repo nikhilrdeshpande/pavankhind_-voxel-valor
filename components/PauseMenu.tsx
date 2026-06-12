@@ -50,7 +50,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
             <div className={`${isMobile ? 'text-[9px]' : 'text-xs'} uppercase tracking-[0.5em] text-orange-200/70`}>{t.ui.choosePath}</div>
             <div className={`${isMobile ? 'mt-1 text-xl' : 'mt-4 text-3xl'} font-black uppercase text-orange-100`}>{t.ui.perkUnlocked}</div>
             <div className={`${isMobile ? 'mt-1 text-[10px]' : 'mt-3 text-xs'} uppercase tracking-[0.24em] text-orange-200/60`}>
-              Choose one upgrade. The fight resumes immediately.
+              {t.ui.perkPrompt}
             </div>
             <div className={`${isMobile ? 'mt-2' : 'mt-6'} grid gap-2 grid-cols-3`}>
               {perkOptions.map(option => (
@@ -99,7 +99,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
                   onClick={onOpenStore}
                   className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-yellow-500/70 text-yellow-200 hover:bg-yellow-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs`}
                 >
-                  Coin Shop
+                  {t.ui.coinShop}
                 </button>
               )}
               <button

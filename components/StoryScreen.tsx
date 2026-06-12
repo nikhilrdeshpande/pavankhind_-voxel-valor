@@ -54,13 +54,13 @@ const StoryScreen: React.FC<StoryScreenProps> = ({ t, storyDialogue, dialogueInd
                 onClick={onSkipAll}
                 className="px-4 py-2 md:px-6 md:py-3 border border-orange-500/70 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest text-[10px] md:text-xs"
               >
-                {t.ui.continueBtn === 'पुढे चला' ? 'कथा वगळा' : 'SKIP STORY'}
+                {t.ui.skipStory}
               </button>
               <button
                 onClick={onShowControls}
                 className="px-4 py-2 md:px-6 md:py-3 border border-orange-500/70 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest text-[10px] md:text-xs"
               >
-                CONTROLS
+                {t.ui.controlsShort}
               </button>
             </div>
           </div>

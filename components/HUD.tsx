@@ -421,11 +421,11 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
             </div>
             {wave > 1 && wave % 3 !== 0 && (
               <div className={`mt-2 ${isMobile ? 'text-sm' : 'text-lg'} text-orange-200/70 uppercase tracking-widest`}>
-                {(t as any).tutorial?.survivedWave || 'You survived Wave'} {wave - 1} — now entering {wave}
+                {t.tutorial.survivedWave} {wave - 1} — {t.ui.nowEntering} {wave}
               </div>
             )}
             <div className={`mt-3 ${isMobile ? 'text-xs' : 'text-sm'} uppercase tracking-[0.35em] text-yellow-100/65`}>
-              {stage === 1 ? 'Opening Hold' : stage === 2 ? 'Enemy Surge' : 'Final Stand'}
+              {t.stages[stage]?.name}
             </div>
           </div>
         </div>
@@ -440,10 +440,10 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
               color: stage === 3 ? '#fecaca' : '#fde68a',
               textShadow: stage === 3 ? '0 0 28px rgba(239,68,68,0.55)' : '0 0 24px rgba(245,158,11,0.45)',
             }}>
-              {stageBanner}
+              {t.stages[stage]?.name ?? stageBanner}
             </div>
             <div className={`mt-2 ${isMobile ? 'text-xs' : 'text-sm'} uppercase tracking-[0.32em] text-orange-100/70`}>
-              {stageDirective}
+              {t.stages[stage]?.directive ?? stageDirective}
             </div>
           </div>
         </div>

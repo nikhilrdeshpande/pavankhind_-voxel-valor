@@ -91,7 +91,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
         <div className="w-full max-w-3xl border-2 border-orange-900/60 bg-zinc-900/90 p-8 shadow-[0_0_60px_rgba(0,0,0,0.7)]">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm uppercase tracking-[0.5em] text-orange-200/80 font-bold">⚔ Armory</div>
+              <div className="text-sm uppercase tracking-[0.5em] text-orange-200/80 font-bold">⚔ {t.ui.armory}</div>
               <div className="mt-1 flex items-center gap-1.5">
                 <span className="inline-block w-3.5 h-3.5 rounded-full" style={{
                   background: 'linear-gradient(135deg, #d97706, #fbbf24)',

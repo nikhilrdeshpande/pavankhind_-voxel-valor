@@ -58,7 +58,7 @@ const BattlePassScreen: React.FC<BattlePassScreenProps> = ({ t, lang, profile, o
         <div className="w-full max-w-3xl border-2 border-orange-900/60 bg-zinc-900/90 p-8 shadow-[0_0_60px_rgba(0,0,0,0.7)]">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm uppercase tracking-[0.5em] text-orange-200/80 font-bold">★ Battle Pass</div>
+              <div className="text-sm uppercase tracking-[0.5em] text-orange-200/80 font-bold">★ {t.ui.battlePass}</div>
               <div className="mt-1 text-base font-bold text-orange-100">
                 Season: <span style={{ color: '#fbbf24', textShadow: '0 0 8px rgba(251,191,36,0.3)' }}>{seasonName}</span>
               </div>

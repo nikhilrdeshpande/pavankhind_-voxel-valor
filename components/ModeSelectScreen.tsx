@@ -232,7 +232,7 @@ const ModeSelectScreen: React.FC<ModeSelectScreenProps> = ({ t, lang, profile, i
                 color: '#fdba74',
               }}
             >
-              ⚔ Armory
+              ⚔ {t.ui.armory}
             </button>
             <button
               onClick={onOpenBattlePass}
@@ -243,7 +243,7 @@ const ModeSelectScreen: React.FC<ModeSelectScreenProps> = ({ t, lang, profile, i
                 color: '#fde68a',
               }}
             >
-              ★ Battle Pass
+              ★ {t.ui.battlePass}
             </button>
           </div>
         </div>
