@@ -17,11 +17,11 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser. The game runs entirely client-side — no backend required.
+Open `http://localhost:3000` in your browser. The game runs entirely client-side — no backend required.
 
 ### Mobile Testing
 
-Add `?mobile` to the URL (`http://localhost:5173?mobile`) to force mobile mode on desktop for testing touch controls and mobile UI layout.
+Add `?mobile` to the URL (`http://localhost:3000?mobile`) to force mobile mode on desktop for testing touch controls and mobile UI layout.
 
 ### Build for Production
 

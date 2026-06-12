@@ -1230,7 +1230,7 @@ this.scene.add(rimLight);
     this.dustMoteMesh.instanceMatrix.needsUpdate = true;
   }
 
-  public updateTimeOfDay(progress: number) {
+  public updateTimeOfDay(progress: number, delta: number) {
     // progress: 0 = start, 1 = end of game
 
     // Dynamic fog
@@ -1251,7 +1251,7 @@ this.scene.add(rimLight);
     this.sunGlow.position.y = this.sunDisc.position.y;
 
     // Sky dome vertex colors — throttled (every 3 seconds)
-    this.skyUpdateTimer -= 0.016; // approximate
+    this.skyUpdateTimer -= delta;
     if (this.skyUpdateTimer <= 0) {
       this.skyUpdateTimer = 3.0;
       const colAttr = this.skyMesh.geometry.getAttribute('color') as THREE.BufferAttribute;

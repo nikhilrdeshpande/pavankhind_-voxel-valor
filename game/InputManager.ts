@@ -76,15 +76,24 @@ export class InputManager {
     this.mouseDelta.set(0, 0);
   }
 
+  private lockTarget: HTMLElement | null = null;
+  private boundLockHandler = () => {
+    if (!document.pointerLockElement && this.lockTarget) {
+      this.lockTarget.requestPointerLock();
+    }
+  };
+
   public lockPointer(element: HTMLElement) {
-    element.addEventListener('mousedown', () => {
-      if (!document.pointerLockElement) {
-          element.requestPointerLock();
-      }
-    });
+    if (this.lockTarget) this.lockTarget.removeEventListener('mousedown', this.boundLockHandler);
+    this.lockTarget = element;
+    element.addEventListener('mousedown', this.boundLockHandler);
   }
 
   public dispose() {
+    if (this.lockTarget) {
+      this.lockTarget.removeEventListener('mousedown', this.boundLockHandler);
+      this.lockTarget = null;
+    }
     window.removeEventListener('keydown', this.boundKeyDown);
     window.removeEventListener('keyup', this.boundKeyUp);
     window.removeEventListener('mousedown', this.boundMouseDown);

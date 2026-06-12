@@ -415,7 +415,7 @@ export class PavankhindEngine {
     // Time-of-day progression (skip if fogOfWar override is active)
     if (!this.config.fogOfWar) {
       const progress = 1 - (this.gameTime / this.config.duration);
-      this.world.updateTimeOfDay(Math.max(0, Math.min(1, progress)));
+      this.world.updateTimeOfDay(Math.max(0, Math.min(1, progress)), delta);
     }
 
     if (this.player.consumeValorStrike()) {

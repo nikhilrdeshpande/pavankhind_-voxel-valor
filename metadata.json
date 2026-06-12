@@ -2,7 +2,5 @@
 {
   "name": "Pavankhind: Voxel Valor",
   "description": "A blocky 3D action-survival game where you defend the mountain pass as Baji Prabhu Deshpande. Voxel aesthetics, high intensity.",
-  "requestFramePermissions": [
-    "microphone"
-  ]
+  "requestFramePermissions": []
 }
