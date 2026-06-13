@@ -83,7 +83,7 @@ const Scorecard: React.FC<ScorecardProps> = ({
             </p>
             <button
               onClick={onViewScorecard}
-              className={`mt-4 ${isMobile ? 'px-5 py-2 text-xs' : 'px-8 py-4 text-sm'} border border-orange-500 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest`}
+              className={`mt-4 ${isMobile ? 'px-5 py-2 text-xs' : 'px-8 py-4 text-sm'} border border-orange-500 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest`}
             >
               {t.ui.viewScorecard}
             </button>

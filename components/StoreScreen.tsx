@@ -104,7 +104,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
             </div>
             <button
               onClick={onClose}
-              className="px-4 py-2 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs rounded-sm"
+              className="px-4 py-2 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs rounded-sm"
               style={{ border: '1.5px solid rgba(249,115,22,0.5)', background: 'rgba(0,0,0,0.3)' }}
             >
               ← Back

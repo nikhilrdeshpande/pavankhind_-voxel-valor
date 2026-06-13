@@ -29,7 +29,7 @@ interface PanelProps {
 export const Panel: React.FC<PanelProps> = ({ children, className = '', accent = 'amber' }) => {
   const a = ACCENTS[accent];
   return (
-    <div className={`relative ${className}`} style={{
+    <div className={`relative panel-enter ${className}`} style={{
       background: 'linear-gradient(160deg, rgba(28,25,23,0.94) 0%, rgba(12,10,9,0.93) 100%)',
       border: `2px solid ${a.border}`,
       boxShadow: '0 0 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.045)',

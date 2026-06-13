@@ -46,19 +46,19 @@ const StoryScreen: React.FC<StoryScreenProps> = ({ t, storyDialogue, dialogueInd
             <div className="flex flex-wrap gap-2 md:gap-4">
               <button
                 onClick={onNext}
-                className="px-6 py-2 md:px-8 md:py-3 border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs md:text-sm"
+                className="px-6 py-2 md:px-8 md:py-3 border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs md:text-sm"
               >
                 {isLast ? t.start.drawBlade : t.ui.continueBtn}
               </button>
               <button
                 onClick={onSkipAll}
-                className="px-4 py-2 md:px-6 md:py-3 border border-orange-500/70 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest text-[10px] md:text-xs"
+                className="px-4 py-2 md:px-6 md:py-3 border border-orange-500/70 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-[10px] md:text-xs"
               >
                 {t.ui.skipStory}
               </button>
               <button
                 onClick={onShowControls}
-                className="px-4 py-2 md:px-6 md:py-3 border border-orange-500/70 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest text-[10px] md:text-xs"
+                className="px-4 py-2 md:px-6 md:py-3 border border-orange-500/70 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-[10px] md:text-xs"
               >
                 {t.ui.controlsShort}
               </button>

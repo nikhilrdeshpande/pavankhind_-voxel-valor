@@ -47,7 +47,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ t, isMobile, ensureIntroAudio
             </button>
             <button
               onClick={onShowControls}
-              className={`${isMobile ? 'px-6 py-3 text-xs' : 'px-8 py-4 text-sm'} border border-orange-500/70 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest`}
+              className={`${isMobile ? 'px-6 py-3 text-xs' : 'px-8 py-4 text-sm'} border border-orange-500/70 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest`}
             >
               {t.ui.controls}
             </button>

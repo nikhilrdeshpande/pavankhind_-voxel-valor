@@ -59,7 +59,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
                   type="button"
                   key={option.id}
                   onClick={() => onSelectPerk(option.id)}
-                  className={`bg-black/40 ${isMobile ? 'px-2 py-2' : 'px-4 py-6'} text-left text-orange-100 hover:bg-orange-500/20 transition-all`}
+                  className={`bg-black/40 ${isMobile ? 'px-2 py-2' : 'px-4 py-6'} text-left text-orange-100 hover:bg-orange-500/20 transition-all btn-juice`}
                   style={{
                     border: '1px solid rgba(249,115,22,0.5)',
                     borderTop: `3px solid ${PERK_STYLE[option.id]?.color ?? '#22c55e'}`,
@@ -85,27 +85,27 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
             <div className={`${isMobile ? 'mt-3' : 'mt-6'} flex flex-wrap justify-center gap-3`}>
               <button
                 onClick={onResume}
-                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-orange-500 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs`}
+                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-orange-500 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs`}
               >
                 {t.ui.resume}
               </button>
               <button
                 onClick={onShowControls}
-                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-orange-500/70 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs`}
+                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-orange-500/70 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs`}
               >
                 {t.ui.controls}
               </button>
               {onOpenStore && (
                 <button
                   onClick={onOpenStore}
-                  className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-yellow-500/70 text-yellow-200 hover:bg-yellow-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs`}
+                  className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-yellow-500/70 text-yellow-200 hover:bg-yellow-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs`}
                 >
                   {t.ui.coinShop}
                 </button>
               )}
               <button
                 onClick={onShowQuit}
-                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-red-500/70 text-red-200 hover:bg-red-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs`}
+                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-red-500/70 text-red-200 hover:bg-red-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs`}
               >
                 {t.ui.quit}
               </button>
@@ -165,7 +165,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
             <div className={`${isMobile ? 'mt-3' : 'mt-6'} flex justify-end`}>
               <button
                 onClick={onCloseControls}
-                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-orange-500 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs`}
+                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-orange-500 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs`}
               >
                 Back
               </button>
@@ -182,13 +182,13 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
             <div className={`${isMobile ? 'mt-3' : 'mt-6'} flex flex-wrap justify-center gap-3`}>
               <button
                 onClick={onQuit}
-                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-red-500 text-red-200 hover:bg-red-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs`}
+                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-red-500 text-red-200 hover:bg-red-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs`}
               >
                 {t.ui.quitToMenu}
               </button>
               <button
                 onClick={onCancelQuit}
-                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-orange-500 text-orange-200 hover:bg-orange-500 hover:text-black transition-all font-bold uppercase tracking-widest text-xs`}
+                className={`${isMobile ? 'px-4 py-2' : 'px-6 py-3'} border border-orange-500 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs`}
               >
                 Continue
               </button>

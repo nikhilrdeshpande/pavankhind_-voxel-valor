@@ -111,7 +111,7 @@ const ModeSelectScreen: React.FC<ModeSelectScreenProps> = ({ t, lang, profile, i
                   key={key}
                   disabled={!unlocked}
                   onClick={() => onSelectMode(key)}
-                  className={`relative text-left transition-all rounded-lg overflow-hidden ${m ? 'p-3' : 'p-5'}`}
+                  className={`relative text-left transition-all rounded-lg overflow-hidden ${unlocked ? 'btn-juice' : ''} ${m ? 'p-3' : 'p-5'}`}
                   style={{
                     background: unlocked
                       ? `linear-gradient(170deg, ${meta.color}15 0%, rgba(0,0,0,0.6) 60%)`

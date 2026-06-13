@@ -212,6 +212,29 @@ html, body {
   animation: screen-enter 400ms ease-out both;
 }
 
+/* Panel entrance — fade + gentle scale, used by the shared Panel frame */
+@keyframes panel-enter {
+  0% { opacity: 0; transform: scale(0.94) translateY(8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.panel-enter {
+  animation: panel-enter 260ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+/* Button juice — hover lift + glow, snappy press feedback */
+.btn-juice {
+  transition: transform 120ms ease, background-color 150ms ease, color 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  will-change: transform;
+}
+.btn-juice:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 14px rgba(249, 115, 22, 0.25);
+}
+.btn-juice:active {
+  transform: translateY(0) scale(0.96);
+  transition-duration: 60ms;
+}
+
 .screen-exit {
   animation: screen-exit 300ms ease-in both;
 }
