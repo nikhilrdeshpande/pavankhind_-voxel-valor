@@ -1,6 +1,7 @@
 
 import React from 'react';
 import type { Strings } from '../localization/strings';
+import { Panel } from './ui/Panel';
 
 interface PerkOption {
   id: string;
@@ -46,7 +47,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
     <>
       {showPerkChoice && (
         <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
-          <div className={`w-full max-w-3xl border-2 border-orange-900/60 bg-zinc-900/90 ${isMobile ? 'p-3 mx-2' : 'p-8'} text-center shadow-[0_0_60px_rgba(0,0,0,0.7)]`}>
+          <Panel accent="amber" className={`w-full max-w-3xl ${isMobile ? 'p-3 mx-2' : 'p-8'} text-center`}>
             <div className={`${isMobile ? 'text-[9px]' : 'text-xs'} uppercase tracking-[0.5em] text-orange-200/70`}>{t.ui.choosePath}</div>
             <div className={`${isMobile ? 'mt-1 text-xl' : 'mt-4 text-3xl'} font-black uppercase text-orange-100`}>{t.ui.perkUnlocked}</div>
             <div className={`${isMobile ? 'mt-1 text-[10px]' : 'mt-3 text-xs'} uppercase tracking-[0.24em] text-orange-200/60`}>
@@ -72,13 +73,13 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
                 </button>
               ))}
             </div>
-          </div>
+          </Panel>
         </div>
       )}
 
       {paused && !showControls && !showQuitConfirm && !showPerkChoice && (
         <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
-          <div className={`w-full max-w-lg border-2 border-orange-900/60 bg-zinc-900/90 ${isMobile ? 'p-4 mx-3' : 'p-8'} text-center shadow-[0_0_60px_rgba(0,0,0,0.7)]`}>
+          <Panel accent="amber" className={`w-full max-w-lg ${isMobile ? 'p-4 mx-3' : 'p-8'} text-center`}>
             <div className={`${isMobile ? 'text-[10px]' : 'text-sm'} uppercase tracking-[0.4em] text-orange-200/70`}>{t.ui.paused}</div>
             <div className={`${isMobile ? 'mt-2 text-xl' : 'mt-4 text-3xl'} font-black uppercase text-orange-100`}>{t.ui.holdLine}</div>
             <div className={`${isMobile ? 'mt-3' : 'mt-6'} flex flex-wrap justify-center gap-3`}>
@@ -109,13 +110,13 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
                 {t.ui.quit}
               </button>
             </div>
-          </div>
+          </Panel>
         </div>
       )}
 
       {showControls && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className={`w-full max-w-2xl border-2 border-orange-900/60 bg-zinc-900/90 ${isMobile ? 'p-4 mx-3' : 'p-8'} shadow-[0_0_60px_rgba(0,0,0,0.7)]`}>
+          <Panel accent="amber" className={`w-full max-w-2xl ${isMobile ? 'p-4 mx-3' : 'p-8'}`}>
             <div className="text-xs uppercase tracking-[0.5em] text-orange-200/70">{t.ui.controls}</div>
             {isMobile ? (
               <div className="mt-3 text-left">
@@ -169,13 +170,13 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
                 Back
               </button>
             </div>
-          </div>
+          </Panel>
         </div>
       )}
 
       {showQuitConfirm && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80">
-          <div className={`w-full max-w-lg border-2 border-red-900/60 bg-zinc-900/95 ${isMobile ? 'p-4 mx-3' : 'p-8'} text-center shadow-[0_0_60px_rgba(0,0,0,0.7)]`}>
+          <Panel accent="red" className={`w-full max-w-lg ${isMobile ? 'p-4 mx-3' : 'p-8'} text-center`}>
             <div className="text-xs uppercase tracking-[0.5em] text-red-200/70">{t.ui.quit}</div>
             <div className={`${isMobile ? 'mt-2 text-lg' : 'mt-4 text-2xl'} font-bold text-red-100`}>{t.ui.quitConfirm}</div>
             <div className={`${isMobile ? 'mt-3' : 'mt-6'} flex flex-wrap justify-center gap-3`}>
@@ -192,7 +193,7 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
                 Continue
               </button>
             </div>
-          </div>
+          </Panel>
         </div>
       )}
     </>

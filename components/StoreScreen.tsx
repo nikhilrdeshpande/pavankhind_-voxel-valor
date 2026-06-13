@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Panel } from './ui/Panel';
 import {
   SWORD_SKINS, ANGARKHA_SKINS, SHIELD_SKINS,
   loadCosmeticState, buySword, buyAngarkha, buyShield,
@@ -88,7 +89,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
     <div className="absolute inset-0 z-50 overflow-hidden">
       <div className="absolute inset-0 intro-backdrop opacity-95 pointer-events-none" />
       <div className="relative flex h-full w-full flex-col items-center justify-center px-6 py-12">
-        <div className="w-full max-w-3xl border-2 border-orange-900/60 bg-zinc-900/90 p-8 shadow-[0_0_60px_rgba(0,0,0,0.7)]">
+        <Panel accent="amber" className="w-full max-w-3xl p-8">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm uppercase tracking-[0.5em] text-orange-200/80 font-bold">⚔ {t.ui.armory}</div>
@@ -427,7 +428,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
               </>
             )}
           </div>
-        </div>
+        </Panel>
       </div>
     </div>
   );

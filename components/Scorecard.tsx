@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Panel } from './ui/Panel';
 import type { GameStats } from '../game/GameConfig';
 import { getRankName } from '../game/Progression';
 import type { PlayerProfile } from '../game/Progression';
@@ -74,7 +75,7 @@ const Scorecard: React.FC<ScorecardProps> = ({
         <div className="absolute inset-0 intro-ember-field pointer-events-none" />
         <div className="absolute inset-0 intro-backdrop pointer-events-none" />
         <div className={`relative flex h-full w-full items-center justify-center ${isMobile ? 'px-3 py-4' : 'px-6 py-12'} text-center`}>
-          <div className={`max-w-3xl border-2 border-orange-900/60 bg-zinc-900/80 ${isMobile ? 'p-4' : 'p-10'} shadow-[0_0_60px_rgba(0,0,0,0.7)]`}>
+          <Panel accent="gold" className={`max-w-3xl ${isMobile ? 'p-4' : 'p-10'}`}>
             <div className="text-xs uppercase tracking-[0.5em] text-orange-200/70">{t.vishalgad.subtitle}</div>
             <h2 className={`mt-2 ${isMobile ? 'text-2xl' : 'text-4xl md:text-5xl'} font-black uppercase text-orange-100`}>{t.vishalgad.title}</h2>
             <p className={`mt-3 ${isMobile ? 'text-sm' : 'text-lg'} text-orange-50/90`}>
@@ -86,7 +87,7 @@ const Scorecard: React.FC<ScorecardProps> = ({
             >
               {t.ui.viewScorecard}
             </button>
-          </div>
+          </Panel>
         </div>
       </div>
     );
