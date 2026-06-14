@@ -1,60 +1,68 @@
 import * as THREE from 'three';
 
 export function createMarathaDhal(faceColor: number, rimColor: number, emblemColor: number, scale = 1): THREE.Group {
+  // A real dhal is a convex round shield: domed hide/steel face, rolled rim,
+  // and four raised brass bosses (char-tuk) in a square near the centre.
   const group = new THREE.Group();
   group.scale.setScalar(scale);
+  // Convention: the dome bulges along +Z (away from the forearm).
 
+  // Domed face — a shallow spherical cap instead of a flat disc.
   const faceMat = new THREE.MeshStandardMaterial({
     color: faceColor,
-    roughness: 0.55,
-    metalness: 0.25,
-    emissive: faceColor,
-    emissiveIntensity: 0.06,
+    roughness: 0.6,
+    metalness: 0.35,
   });
-  const face = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 0.08, 20), faceMat);
-  face.rotation.x = Math.PI / 2;
-  group.add(face);
+  const dome = new THREE.Mesh(
+    new THREE.SphereGeometry(0.9, 28, 18, 0, Math.PI * 2, 0, Math.PI * 0.42),
+    faceMat,
+  );
+  // Cap sits around the +Y pole; rotate it to bulge toward +Z, then squash:
+  // planar radius ~0.64 (just inside the 0.67 rim), shallow ~0.22 depth.
+  dome.rotation.x = Math.PI / 2;
+  dome.scale.set(0.72, 0.32, 0.72);
+  group.add(dome);
 
-  const rimMat = new THREE.MeshStandardMaterial({ color: rimColor, roughness: 0.28, metalness: 0.75 });
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.69, 0.055, 8, 24), rimMat);
-  rim.rotation.x = Math.PI / 2;
+  // Solid back plate so the shield is never see-through.
+  const backMat = new THREE.MeshStandardMaterial({ color: 0x2a1c10, roughness: 0.85, metalness: 0.1, side: THREE.DoubleSide });
+  const back = new THREE.Mesh(new THREE.CircleGeometry(0.66, 28), backMat);
+  back.position.z = -0.02;
+  group.add(back);
+
+  // Rolled brass rim around the edge.
+  const rimMat = new THREE.MeshStandardMaterial({ color: rimColor, roughness: 0.3, metalness: 0.85 });
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.67, 0.06, 10, 32), rimMat);
   group.add(rim);
 
-  const innerRing = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.018, 6, 20), rimMat);
-  innerRing.rotation.x = Math.PI / 2;
-  innerRing.position.z = 0.045;
-  group.add(innerRing);
-
+  // Central raised brass boss.
   const bossMat = new THREE.MeshStandardMaterial({
-    color: rimColor,
-    roughness: 0.25,
-    metalness: 0.8,
-    emissive: emblemColor,
-    emissiveIntensity: 0.24,
+    color: rimColor, roughness: 0.25, metalness: 0.9,
+    emissive: emblemColor, emissiveIntensity: 0.18,
   });
-  const boss = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 10), bossMat);
-  boss.position.z = 0.07;
-  group.add(boss);
+  const centerBoss = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), bossMat);
+  centerBoss.rotation.x = Math.PI / 2;
+  centerBoss.position.z = 0.27; // crown the dome peak (~0.29)
+  group.add(centerBoss);
 
-  const studMat = new THREE.MeshStandardMaterial({ color: emblemColor, metalness: 0.65, roughness: 0.35 });
-  for (let i = 0; i < 8; i++) {
-    const angle = (i / 8) * Math.PI * 2;
-    const radius = i % 2 === 0 ? 0.42 : 0.28;
-    const stud = new THREE.Mesh(new THREE.SphereGeometry(0.04, 7, 7), studMat);
-    stud.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius, 0.07);
-    group.add(stud);
-  }
-
-  const spokeMat = new THREE.MeshStandardMaterial({ color: rimColor, metalness: 0.55, roughness: 0.35 });
+  // Four raised bosses in a square — the signature char-tuk fittings.
+  // z follows the dome surface so each boss sits proud of the leather.
   for (let i = 0; i < 4; i++) {
-    const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.58, 0.025), spokeMat);
-    spoke.position.z = 0.055;
-    spoke.rotation.z = (i / 4) * Math.PI;
-    group.add(spoke);
+    const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+    const r = 0.38;
+    const z = 0.235; // dome surface height at r=0.38
+    const boss = new THREE.Mesh(new THREE.SphereGeometry(0.085, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2), bossMat);
+    boss.rotation.x = Math.PI / 2;
+    boss.position.set(Math.cos(angle) * r, Math.sin(angle) * r, z);
+    group.add(boss);
+    // small brass ring seat around each boss
+    const seat = new THREE.Mesh(new THREE.TorusGeometry(0.115, 0.014, 6, 16), rimMat);
+    seat.position.set(Math.cos(angle) * r, Math.sin(angle) * r, z - 0.04);
+    group.add(seat);
   }
 
-  const gripMat = new THREE.MeshStandardMaterial({ color: 0x2f2116, roughness: 0.9 });
-  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.48, 0.08), gripMat);
+  // Leather grip strap on the back.
+  const gripMat = new THREE.MeshStandardMaterial({ color: 0x2f2116, roughness: 0.92 });
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.5, 0.06), gripMat);
   grip.position.z = -0.06;
   group.add(grip);
 
