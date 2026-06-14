@@ -4,6 +4,7 @@ import { Player } from './Player';
 import { AudioManager } from './AudioManager';
 import { createClothPanel, createMarathaDhal } from './ModelParts';
 import { spawnTransientVfx } from './TransientVfx';
+import { boostMetalReflections } from './EnvMap';
 
 type EnemyType = 'STANDARD' | 'RUSHER' | 'SHIELDER' | 'ARCHER' | 'BRUTE' | 'BOSS';
 
@@ -510,6 +511,7 @@ class Enemy {
     shadowBlob.position.y = 0.025;
     this.mesh.add(shadowBlob);
     this.lastPos.copy(startPos);
+    boostMetalReflections(this.mesh);
     scene.add(this.mesh);
   }
 

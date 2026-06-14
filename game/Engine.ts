@@ -15,6 +15,7 @@ import { loadCosmeticState, getEquippedSwordSkin, getEquippedAngarkhaSkin, getEq
 import { ParticlePool } from './ParticlePool';
 import { updateTransientVfx, clearTransientVfx } from './TransientVfx';
 import { disposeSceneGraph } from './DisposeUtils';
+import { createSahyadriEnv } from './EnvMap';
 
 export type { GameStats } from './GameConfig';
 export { GAME_MODES } from './GameConfig';
@@ -220,6 +221,9 @@ export class PavankhindEngine {
   // Particle pool
   private particlePool: ParticlePool;
 
+  // Image-based lighting env map
+  private envMap: THREE.Texture | null = null;
+
   constructor(canvas: HTMLCanvasElement, callbacks: GameCallbacks, config?: GameConfig) {
     this.callbacks = callbacks;
     this.config = config || GAME_MODES.skirmish;
@@ -235,6 +239,10 @@ export class PavankhindEngine {
     this.renderer.shadowMap.enabled = true;
     this.renderer.toneMapping = THREE.ReinhardToneMapping;
     this.renderer.toneMappingExposure = 1.8;
+
+    // Image-based lighting: warm sunset reflections on all PBR metals/cloth.
+    this.envMap = createSahyadriEnv(this.renderer);
+    this.scene.environment = this.envMap;
 
     this.clock = new THREE.Clock();
     try {
@@ -947,6 +955,8 @@ export class PavankhindEngine {
     // Free all GPU resources (geometries, materials, textures) so rapid
     // "Play Again" remounts don't accumulate abandoned scene graphs.
     disposeSceneGraph(this.scene);
+    if (this.envMap) { this.envMap.dispose(); this.envMap = null; }
+    this.scene.environment = null;
     if (this.composer) {
       this.composer.dispose();
     }

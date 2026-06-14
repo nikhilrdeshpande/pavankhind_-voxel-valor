@@ -4,6 +4,7 @@ import { InputManager } from './InputManager';
 import { AudioManager } from './AudioManager';
 import { createClothPanel, createMarathaDhal } from './ModelParts';
 import { spawnTransientVfx } from './TransientVfx';
+import { boostMetalReflections } from './EnvMap';
 
 export class Player {
   private mesh: THREE.Group;
@@ -536,6 +537,7 @@ export class Player {
     this.trailMesh = this.createSwordTrail();
     scene.add(this.trailMesh);
 
+    boostMetalReflections(this.mesh);
     scene.add(this.mesh);
   }
 
