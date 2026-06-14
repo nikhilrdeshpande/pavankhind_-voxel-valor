@@ -1019,6 +1019,7 @@ export class EnemyManager {
   /** Clear cross-instance state so a new game doesn't inherit live arrows. */
   public static resetStatics() {
     EnemyManager.arrows = [];
+    DamageNumber.disposeShared();
   }
   private static arrowBlockers: { x: number; z: number; radius: number }[] = [];
   private bossActive = false;
@@ -1596,26 +1597,48 @@ class DamageNumber {
   private life = 0.8;
   private velocity = new THREE.Vector3(0, 3, 0);
 
-  constructor(scene: THREE.Scene, position: THREE.Vector3, amount: number, camera: THREE.Camera) {
-    this.scene = scene;
-    // Create a small plane with the damage number as a canvas texture
+  // Shared across all damage numbers — built once, never per-hit.
+  private static geo: THREE.PlaneGeometry | null = null;
+  private static texCache = new Map<string, THREE.CanvasTexture>();
+
+  /** Cached number texture keyed by value+colour — avoids a GPU upload per hit. */
+  private static getTexture(amount: number, big: boolean): THREE.CanvasTexture {
+    const rounded = Math.round(amount);
+    const key = `${rounded}|${big ? 1 : 0}`;
+    let tex = DamageNumber.texCache.get(key);
+    if (tex) return tex;
     const canvas = document.createElement('canvas');
     canvas.width = 128;
     canvas.height = 64;
     const ctx = canvas.getContext('2d')!;
     ctx.font = 'bold 48px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = amount >= 200 ? '#ff4444' : '#ffcc44';
+    ctx.fillStyle = big ? '#ff4444' : '#ffcc44';
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 3;
-    ctx.strokeText(Math.round(amount).toString(), 64, 48);
-    ctx.fillText(Math.round(amount).toString(), 64, 48);
-    const texture = new THREE.CanvasTexture(canvas);
+    ctx.strokeText(rounded.toString(), 64, 48);
+    ctx.fillText(rounded.toString(), 64, 48);
+    tex = new THREE.CanvasTexture(canvas);
+    DamageNumber.texCache.set(key, tex);
+    return tex;
+  }
+
+  /** Free shared resources on engine teardown. */
+  static disposeShared() {
+    DamageNumber.texCache.forEach(t => t.dispose());
+    DamageNumber.texCache.clear();
+    DamageNumber.geo?.dispose();
+    DamageNumber.geo = null;
+  }
+
+  constructor(scene: THREE.Scene, position: THREE.Vector3, amount: number, camera: THREE.Camera) {
+    this.scene = scene;
+    if (!DamageNumber.geo) DamageNumber.geo = new THREE.PlaneGeometry(1.5, 0.75);
     const mat = new THREE.MeshBasicMaterial({
-      map: texture, transparent: true, opacity: 1.0,
+      map: DamageNumber.getTexture(amount, amount >= 200), transparent: true, opacity: 1.0,
       side: THREE.DoubleSide, depthWrite: false,
     });
-    this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.75), mat);
+    this.mesh = new THREE.Mesh(DamageNumber.geo, mat);
     this.mesh.position.copy(position);
     this.mesh.position.y += 2.5 + Math.random() * 0.5;
     this.mesh.position.x += (Math.random() - 0.5) * 1.0;
@@ -1634,6 +1657,7 @@ class DamageNumber {
     this.mesh.scale.setScalar(0.8 + (1 - t) * 0.4);
     if (this.life <= 0) {
       this.scene.remove(this.mesh);
+      (this.mesh.material as THREE.Material).dispose(); // shared geo + cached texture survive
       return false;
     }
     return true;
