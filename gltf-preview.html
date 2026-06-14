@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>GLTF quality preview</title>
+<style>
+  body{margin:0;background:#1a120a;overflow:hidden;font-family:sans-serif}
+  #label{position:fixed;top:10px;left:12px;color:#fde68a;font-size:13px;
+    letter-spacing:.1em;text-transform:uppercase;background:rgba(0,0,0,.5);padding:6px 10px}
+</style></head>
+<body>
+<div id="label">Rigged GLTF character · skeletal animation · game env lighting</div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { createSahyadriEnv } from '/game/EnvMap.ts';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.toneMapping = THREE.ReinhardToneMapping;
+renderer.toneMappingExposure = 1.8;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x3a2614);
+scene.environment = createSahyadriEnv(renderer); // same warm IBL as the game
+
+const cam = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 100);
+cam.position.set(2.4, 2.2, 4.2);
+cam.lookAt(0, 1.5, 0);
+
+// game-like lights
+scene.add(new THREE.HemisphereLight(0xe8eef0, 0x2a5a3a, 1.4));
+const sun = new THREE.DirectionalLight(0xfff0d8, 2.2); sun.position.set(-4,6,-8); sun.castShadow = true; scene.add(sun);
+scene.add((()=>{const l=new THREE.DirectionalLight(0x9fc2ff,0.5); l.position.set(6,7,-16); return l;})());
+
+// ground
+const ground = new THREE.Mesh(new THREE.CircleGeometry(8, 48),
+  new THREE.MeshStandardMaterial({ color: 0x6b5436, roughness: 1 }));
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+
+let mixer = null;
+const clock = new THREE.Clock();
+new GLTFLoader().load('/models/soldier.glb', (gltf) => {
+  const model = gltf.scene;
+  model.scale.setScalar(1.4);
+  model.traverse(o => { if (o.isMesh){ o.castShadow = true; } });
+  scene.add(model);
+  mixer = new THREE.AnimationMixer(model);
+  // Soldier ships Idle/Walk/Run — play Walk to show skeletal motion
+  const clip = THREE.AnimationClip.findByName(gltf.animations, 'Walk') || gltf.animations[1] || gltf.animations[0];
+  mixer.clipAction(clip).play();
+  document.getElementById('label').textContent =
+    `Rigged GLTF · ${gltf.animations.map(a=>a.name).join(', ')} · ${renderer.info.render.triangles} tris`;
+  window.__ready = true;
+});
+
+function loop(){
+  if (mixer) mixer.update(clock.getDelta());
+  renderer.render(scene, cam);
+  requestAnimationFrame(loop);
+}
+loop();
+addEventListener('resize', () => {
+  cam.aspect = innerWidth/innerHeight; cam.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body></html>
