@@ -1,4 +1,14 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+
+/**
+ * Box with softened corners — drop-in for BoxGeometry on visible body pieces.
+ * Radius is clamped so it never exceeds half the smallest dimension.
+ */
+export function roundedBox(w: number, h: number, d: number, radius = 0.05, segments = 3): THREE.BufferGeometry {
+  const r = Math.min(radius, Math.min(w, h, d) / 2 - 0.001);
+  return new RoundedBoxGeometry(w, h, d, segments, Math.max(0.005, r));
+}
 
 export function createMarathaDhal(faceColor: number, rimColor: number, emblemColor: number, scale = 1): THREE.Group {
   // A real dhal is a convex round shield: domed hide/steel face, rolled rim,

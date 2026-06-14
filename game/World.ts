@@ -580,6 +580,12 @@ const rimLight = new THREE.DirectionalLight(0xffaa66, 0.3);
 rimLight.position.set(0, 50, 200);
 this.scene.add(rimLight);
 
+// --- Cool character rim — edges from behind-side, contrasts the warm scene
+// so warriors separate cleanly from the dim pass. Kept subtle to not recolour.
+const coolRim = new THREE.DirectionalLight(0x9fc2ff, 0.5);
+coolRim.position.set(60, 70, -160);
+this.scene.add(coolRim);
+
     // --- Mist Layers (drifting translucent planes, orange tinted for sunset) ---
     const mistMat = new THREE.MeshBasicMaterial({
       color: 0xd0a880,

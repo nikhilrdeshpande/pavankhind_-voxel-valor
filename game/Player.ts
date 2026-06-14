@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { InputManager } from './InputManager';
 import { AudioManager } from './AudioManager';
-import { createClothPanel, createMarathaDhal } from './ModelParts';
+import { createClothPanel, createMarathaDhal, roundedBox } from './ModelParts';
 import { spawnTransientVfx } from './TransientVfx';
 import { boostMetalReflections } from './EnvMap';
 
@@ -130,7 +130,7 @@ export class Player {
 
     // --- Torso (Angarkha) ---
     const torso = new THREE.Mesh(
-      new THREE.BoxGeometry(1.0, 1.6, 0.6),
+      roundedBox(1.0, 1.6, 0.6, 0.14),
       angarkhaMat
     );
     torso.position.y = 1.1;
@@ -163,7 +163,7 @@ export class Player {
 
     // --- Dhoti (lower garment) ---
     const dhoti = new THREE.Mesh(
-      new THREE.BoxGeometry(0.9, 0.8, 0.55),
+      roundedBox(0.9, 0.8, 0.55, 0.12),
       new THREE.MeshStandardMaterial({ color: 0xf0e6d0, roughness: 0.85 })
     );
     dhoti.position.set(0, 0.2, 0);
@@ -173,20 +173,20 @@ export class Player {
     const legMat = new THREE.MeshStandardMaterial({ color: 0x8d5a3b, roughness: 0.8 });
     const dhotiFabricMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d0, roughness: 0.85 });
     // Left leg
-    const leftThigh = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.45, 0.25), dhotiFabricMat);
+    const leftThigh = new THREE.Mesh(roundedBox(0.25, 0.45, 0.25, 0.09), dhotiFabricMat);
     leftThigh.position.set(-0.2, -0.25, 0);
     this.mesh.add(leftThigh);
     this.leftThigh = leftThigh;
-    const leftShin = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.2), legMat);
+    const leftShin = new THREE.Mesh(roundedBox(0.2, 0.4, 0.2, 0.08), legMat);
     leftShin.position.set(-0.2, -0.6, 0);
     this.mesh.add(leftShin);
     this.leftShin = leftShin;
     // Right leg
-    const rightThigh = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.45, 0.25), dhotiFabricMat);
+    const rightThigh = new THREE.Mesh(roundedBox(0.25, 0.45, 0.25, 0.09), dhotiFabricMat);
     rightThigh.position.set(0.2, -0.25, 0);
     this.mesh.add(rightThigh);
     this.rightThigh = rightThigh;
-    const rightShin = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.2), legMat);
+    const rightShin = new THREE.Mesh(roundedBox(0.2, 0.4, 0.2, 0.08), legMat);
     rightShin.position.set(0.2, -0.6, 0);
     this.mesh.add(rightShin);
     this.rightShin = rightShin;
@@ -213,7 +213,7 @@ export class Player {
 
     // --- Head ---
     const head = new THREE.Mesh(
-      new THREE.BoxGeometry(0.55, 0.55, 0.55),
+      roundedBox(0.55, 0.55, 0.55, 0.12),
       skinMat
     );
     head.position.y = 1.95;
@@ -234,14 +234,14 @@ export class Player {
 
     // --- Pagdi (Saffron Turban - layered wrap) ---
     const pagdiMat = new THREE.MeshStandardMaterial({ color: 0xff6600, roughness: 0.8 });
-    const pagdiBase = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 0.55), pagdiMat);
+    const pagdiBase = new THREE.Mesh(roundedBox(0.6, 0.2, 0.55, 0.09), pagdiMat);
     pagdiBase.position.set(0, 2.15, 0);
     this.mesh.add(pagdiBase);
-    const pagdiMid = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.2, 0.5), pagdiMat);
+    const pagdiMid = new THREE.Mesh(roundedBox(0.55, 0.2, 0.5, 0.09), pagdiMat);
     pagdiMid.position.set(0.02, 2.33, 0.02);
     pagdiMid.rotation.y = 0.1;
     this.mesh.add(pagdiMid);
-    const pagdiTop = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.18, 0.45), pagdiMat);
+    const pagdiTop = new THREE.Mesh(roundedBox(0.48, 0.18, 0.45, 0.08), pagdiMat);
     pagdiTop.position.set(-0.02, 2.48, -0.02);
     pagdiTop.rotation.y = -0.08;
     this.mesh.add(pagdiTop);
@@ -412,7 +412,7 @@ export class Player {
     rUpperArm.position.y = -0.28;
     rArm.add(rUpperArm);
     const rForearm = new THREE.Mesh(
-      new THREE.BoxGeometry(0.25, 0.55, 0.25),
+      roundedBox(0.25, 0.55, 0.25, 0.09),
       skinMat
     );
     rForearm.position.y = -0.75;
@@ -430,26 +430,23 @@ export class Player {
     this.swordPivot = new THREE.Group();
     this.swordPivot.position.set(0, -0.9, -0.1);
     rArm.add(this.swordPivot);
+    // Curved single-edged talwar blade — extruded from a saber silhouette.
+    // Length runs along +Y (base 0 -> tip 3.0), curving toward +X, thin in Z.
+    const bladeShape = new THREE.Shape();
+    bladeShape.moveTo(-0.055, 0);
+    bladeShape.quadraticCurveTo(0.02, 1.5, 0.46, 3.0);   // spine (back edge) sweeps to the tip
+    bladeShape.quadraticCurveTo(0.30, 1.35, 0.085, 0);   // cutting belly returns to the base
+    bladeShape.lineTo(-0.055, 0);
+    const bladeGeo = new THREE.ExtrudeGeometry(bladeShape, {
+      depth: 0.05, bevelEnabled: true, bevelThickness: 0.014, bevelSize: 0.014, bevelSegments: 1, steps: 1,
+    });
+    bladeGeo.translate(0, 0, -0.039); // centre the thickness on Z
     this.sword = new THREE.Mesh(
-      new THREE.BoxGeometry(0.13, 3.15, 0.045),
-      new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 1.0, roughness: 0.15 })
+      bladeGeo,
+      new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 1.0, roughness: 0.14 })
     );
-    this.sword.position.y = 1.8;
+    this.sword.position.y = 0.3;
     this.swordPivot.add(this.sword);
-    // Blade edge highlight
-    const bladeEdge = new THREE.Mesh(
-      new THREE.BoxGeometry(0.02, 2.9, 0.01),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xaaaaaa, emissiveIntensity: 0.3, metalness: 1.0, roughness: 0.1 })
-    );
-    bladeEdge.position.set(0.08, 1.8, 0);
-    this.swordPivot.add(bladeEdge);
-    const bladeTip = new THREE.Mesh(
-      new THREE.ConeGeometry(0.085, 0.28, 4),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1.0, roughness: 0.1 })
-    );
-    bladeTip.position.y = 3.42;
-    bladeTip.rotation.z = Math.PI / 4;
-    this.swordPivot.add(bladeTip);
     // Cross-guard
     const crossGuardR = new THREE.Mesh(
       new THREE.BoxGeometry(0.4, 0.08, 0.08),
@@ -479,7 +476,7 @@ export class Player {
     lUpperArm.position.y = -0.28;
     this.leftArm.add(lUpperArm);
     const lForearm = new THREE.Mesh(
-      new THREE.BoxGeometry(0.25, 0.55, 0.25),
+      roundedBox(0.25, 0.55, 0.25, 0.09),
       skinMat
     );
     lForearm.position.y = -0.75;
