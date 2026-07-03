@@ -12,7 +12,7 @@ import MobileControls from './components/MobileControls';
 import type { PavankhindEngine } from './game/Engine';
 import type { GameStats } from './game/GameConfig';
 import { GAME_MODES } from './game/GameConfig';
-import { loadProfile, processRunEnd } from './game/Progression';
+import { loadProfile, saveProfile, processRunEnd } from './game/Progression';
 import type { PlayerProfile } from './game/Progression';
 import { strings } from './localization/strings';
 import type { Lang } from './localization/strings';
@@ -301,16 +301,16 @@ const App: React.FC = () => {
     AdManager.getInstance().showRewardedAd('double_coins', (rewarded) => {
       if (rewarded) {
         setCanDoubleCoins(false);
-        setLastRunCoins(prev => {
-          const bonus = prev;
-          const p = loadProfile();
-          p.currency += bonus;
-          setProfile({ ...p });
-          return prev * 2;
-        });
+        // Persist the bonus (equal to the base run coins) before touching state,
+        // so the reward survives a reload. Keep side-effects out of the updater.
+        const p = loadProfile();
+        p.currency += lastRunCoins;
+        saveProfile(p);
+        setProfile({ ...p });
+        setLastRunCoins(prev => prev * 2);
       }
     });
-  }, []);
+  }, [lastRunCoins]);
 
   const handleShareDownload = useCallback(async () => {
     const canvas = document.createElement('canvas');

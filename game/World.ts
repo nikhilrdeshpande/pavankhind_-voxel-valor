@@ -7,6 +7,13 @@ interface Torch {
   phase: number; // random offset for flicker
 }
 
+// Time-of-day lerp targets — hoisted out of the per-frame update loop.
+const TOD_FOG_START = new THREE.Color(0xd8b898);
+const TOD_FOG_END = new THREE.Color(0xb07060);
+const TOD_SUN_END = new THREE.Color(0xff8844);
+const TOD_BG_END = new THREE.Color(0x804838);
+const TOD_DISC_END = new THREE.Color(0xff4020);
+
 export type PowerupKind = 'amrut' | 'utsah' | 'parakram' | 'dhal';
 
 export interface PowerupInfo {
@@ -1243,21 +1250,19 @@ this.scene.add(coolRim);
   public updateTimeOfDay(progress: number, delta: number) {
     // progress: 0 = start, 1 = end of game
 
-    // Dynamic fog
-    const fogStartColor = new THREE.Color(0xd8b898);
-    const fogEndColor = new THREE.Color(0xb07060);
-    this.fog.color.copy(fogStartColor).lerp(fogEndColor, progress * 0.5);
+    // Dynamic fog — colours are module constants (no per-frame allocation)
+    this.fog.color.copy(TOD_FOG_START).lerp(TOD_FOG_END, progress * 0.5);
     this.fog.density = 0.0018 + progress * 0.001;
 
     // Lights — every frame (cheap)
     this.hemiLight.intensity = 1.6 - progress * 0.7;
     this.sunLight.intensity = 2.5 - progress * 1.1;
-    this.sunLight.color.setHex(0xffe8c0).lerp(new THREE.Color(0xff8844), progress);
-    (this.scene.background as THREE.Color).set(0xd8b888).lerp(new THREE.Color(0x804838), progress);
+    this.sunLight.color.setHex(0xffe8c0).lerp(TOD_SUN_END, progress);
+    (this.scene.background as THREE.Color).set(0xd8b888).lerp(TOD_BG_END, progress);
 
     // Sun disc: lower and redden
     this.sunDisc.position.y = 80 - progress * 50;
-    (this.sunDisc.material as THREE.MeshBasicMaterial).color.set(0xffd080).lerp(new THREE.Color(0xff4020), progress);
+    (this.sunDisc.material as THREE.MeshBasicMaterial).color.set(0xffd080).lerp(TOD_DISC_END, progress);
     this.sunGlow.position.y = this.sunDisc.position.y;
 
     // Sky dome vertex colors — throttled (every 3 seconds)

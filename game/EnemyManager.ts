@@ -5,6 +5,7 @@ import { AudioManager } from './AudioManager';
 import { createClothPanel, createMarathaDhal } from './ModelParts';
 import { spawnTransientVfx } from './TransientVfx';
 import { boostMetalReflections } from './EnvMap';
+import { disposeObject3D } from './DisposeUtils';
 
 type EnemyType = 'STANDARD' | 'RUSHER' | 'SHIELDER' | 'ARCHER' | 'BRUTE' | 'BOSS';
 
@@ -715,10 +716,16 @@ class Enemy {
 
     if (this.hitFlash > 0) {
       this.hitFlash -= delta * 12;
+      const flashing = this.hitFlash > 0.5;
       this.mesh.traverse(o => {
         if ((o as THREE.Mesh).isMesh && o !== this.healthBar) {
             const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial;
-            if (m.emissive) m.emissive.setHex(this.hitFlash > 0.5 ? 0xffffff : 0x000000);
+            if (m.emissive) {
+              // Remember each material's real emissive so we restore it after the
+              // flash instead of forcing black (which killed boss eye/turban glow).
+              if (m.userData.baseEmissive === undefined) m.userData.baseEmissive = m.emissive.getHex();
+              m.emissive.setHex(flashing ? 0xffffff : m.userData.baseEmissive);
+            }
         }
       });
     }
@@ -1340,15 +1347,16 @@ class HitBurst {
       this.dustRing.scale.setScalar(1 + (1 - t) * 3);
       (this.dustRing.material as THREE.MeshBasicMaterial).opacity = t * 0.5;
       if (this.dustLife <= 0) {
-        this.scene.remove(this.dustRing);
+        disposeObject3D(this.dustRing);
         this.dustRing = null;
       }
     }
 
     if (this.life <= 0) {
-      this.scene.remove(this.group);
+      disposeObject3D(this.group);
       if (this.dustRing) {
-        this.scene.remove(this.dustRing);
+        disposeObject3D(this.dustRing);
+        this.dustRing = null;
       }
       return false;
     }
@@ -1432,21 +1440,21 @@ class Arrow {
     const dist = this.mesh.position.distanceTo(this.player.getPosition());
     if (dist < 2.8 && this.player.deflectProjectile(this.mesh.position)) {
       this.spawnDeflectImpact();
-      this.scene.remove(this.mesh);
+      disposeObject3D(this.mesh);
       return false;
     }
     if (this.hitsBlocker()) {
       this.spawnBlockerImpact();
-      this.scene.remove(this.mesh);
+      disposeObject3D(this.mesh);
       return false;
     }
     if (dist < 2.2) {
       this.player.takeDamage(15);
-      this.scene.remove(this.mesh);
+      disposeObject3D(this.mesh);
       return false;
     }
     if (this.life <= 0) {
-      this.scene.remove(this.mesh);
+      disposeObject3D(this.mesh);
       return false;
     }
     return true;
@@ -1549,7 +1557,7 @@ class ValorRing {
     const mat = this.ring.material as THREE.MeshBasicMaterial;
     mat.opacity = (1 - t) * 0.9;
     if (this.life <= 0) {
-      this.scene.remove(this.ring);
+      disposeObject3D(this.ring);
       return false;
     }
     return true;
@@ -1584,7 +1592,7 @@ class ValorColumn {
     this.column.scale.set(1 + (1 - t) * 2, 1, 1 + (1 - t) * 2);
     (this.column.material as THREE.MeshBasicMaterial).opacity = t * 0.7;
     if (this.life <= 0) {
-      this.scene.remove(this.column);
+      disposeObject3D(this.column);
       return false;
     }
     return true;
@@ -1697,7 +1705,7 @@ class ValorShockwave {
     this.disc.scale.setScalar(scale);
     (this.disc.material as THREE.MeshBasicMaterial).opacity = (1 - t) * 0.5;
     if (this.life <= 0) {
-      this.scene.remove(this.disc);
+      disposeObject3D(this.disc);
       return false;
     }
     return true;

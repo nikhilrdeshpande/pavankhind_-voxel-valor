@@ -44,11 +44,17 @@ export function clearTransientVfx() {
 }
 
 function removeEntry(e: VfxEntry) {
+  // Dedupe: sibling meshes often share one material (e.g. debris shards),
+  // so disposing per-mesh would free the same material many times.
+  const geos = new Set<THREE.BufferGeometry>();
+  const mats = new Set<THREE.Material>();
   for (const m of e.meshes) {
     e.scene.remove(m);
-    m.geometry.dispose();
+    if (m.geometry) geos.add(m.geometry);
     const mat = m.material;
-    if (Array.isArray(mat)) mat.forEach(x => x.dispose());
-    else mat.dispose();
+    if (Array.isArray(mat)) mat.forEach(x => mats.add(x));
+    else if (mat) mats.add(mat);
   }
+  geos.forEach(g => g.dispose());
+  mats.forEach(m => m.dispose());
 }

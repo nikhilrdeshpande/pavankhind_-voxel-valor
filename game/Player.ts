@@ -5,6 +5,7 @@ import { AudioManager } from './AudioManager';
 import { createClothPanel, createMarathaDhal, roundedBox } from './ModelParts';
 import { spawnTransientVfx } from './TransientVfx';
 import { boostMetalReflections } from './EnvMap';
+import { disposeObject3D } from './DisposeUtils';
 
 export class Player {
   private mesh: THREE.Group;
@@ -973,7 +974,7 @@ export class Player {
         mat.opacity = opacity;
       });
       if (img.life <= 0) {
-        this.scene.remove(img.mesh);
+        disposeObject3D(img.mesh);
         return false;
       }
       return true;
@@ -1213,7 +1214,7 @@ export class Player {
       p.mesh.position.addScaledVector(p.vel, delta);
       (p.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, p.life / 0.3) * 0.4;
       if (p.life <= 0) {
-        this.scene.remove(p.mesh);
+        disposeObject3D(p.mesh);
         return false;
       }
       return true;

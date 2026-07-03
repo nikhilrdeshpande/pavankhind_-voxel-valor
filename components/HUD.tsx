@@ -25,20 +25,21 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
 
   const prevScoreRef = useRef(score);
   const scoreChanged = score !== prevScoreRef.current;
-  useEffect(() => { prevScoreRef.current = score; }, [score]);
 
   const [killFloats, setKillFloats] = useState<{ id: number; key: number }[]>([]);
   const killIdRef = useRef(0);
   const [battleCry, setBattleCry] = useState<string | null>(null);
   const battleCryTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Kill feedback: +1 floating number on score change
+  // Kill feedback: +1 floating number on score change. Update the ref AFTER the
+  // check (not in a separate earlier effect, which would clobber it first).
   useEffect(() => {
     if (score > prevScoreRef.current) {
       const id = ++killIdRef.current;
       setKillFloats(prev => [...prev.slice(-4), { id, key: id }]);
       setTimeout(() => setKillFloats(prev => prev.filter(k => k.id !== id)), 800);
     }
+    prevScoreRef.current = score;
   }, [score]);
 
   // Battle cries on combo 5+ or parry (triggered by combo crossing 5)
@@ -55,8 +56,10 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
   const comboColor = combo >= 9 ? '#c084fc' : combo >= 6 ? '#ef4444' : '#f97316';
   const comboLabel = combo >= 9 ? t.combo.mythic : combo >= 6 ? t.combo.onslaught : t.combo.fury;
 
-  const timerSeconds = Math.ceil(timeRemaining % 60);
-  const timerMinutes = Math.floor(timeRemaining / 60);
+  // Ceil the whole value first, then split — avoids "1:60" at minute boundaries.
+  const timerTotal = Math.max(0, Math.ceil(timeRemaining));
+  const timerSeconds = timerTotal % 60;
+  const timerMinutes = Math.floor(timerTotal / 60);
   const timerLow = timeRemaining < 30;
   const timerCritical = timeRemaining < 10;
 

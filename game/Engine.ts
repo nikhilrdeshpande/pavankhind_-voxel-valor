@@ -14,7 +14,7 @@ import { GAME_MODES } from './GameConfig';
 import { loadCosmeticState, getEquippedSwordSkin, getEquippedAngarkhaSkin, getEquippedShieldSkin } from './Cosmetics';
 import { ParticlePool } from './ParticlePool';
 import { updateTransientVfx, clearTransientVfx } from './TransientVfx';
-import { disposeSceneGraph } from './DisposeUtils';
+import { disposeSceneGraph, disposeObject3D } from './DisposeUtils';
 import { createSahyadriEnv } from './EnvMap';
 
 export type { GameStats } from './GameConfig';
@@ -597,7 +597,7 @@ export class PavankhindEngine {
         const dist = p.position.distanceTo(this.player.getPosition());
         if (dist < 3.0) {
             this.applyPowerup(p);
-            this.scene.remove(p);
+            disposeObject3D(p);
             return false;
         }
         return true;
