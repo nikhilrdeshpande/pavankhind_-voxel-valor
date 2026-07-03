@@ -526,8 +526,14 @@ class Enemy {
       this.mesh.scale.setScalar(0.5 + t * 0.5);
       this.mesh.position.y -= delta * 2;
       if (this.deathTimer <= 0) {
-        this.scene.remove(this.mesh);
-        if (this.aimLine) this.scene.remove(this.aimLine);
+        // Death animation done: free the whole body. Every enemy geometry and
+        // material is built per-instance (ModelParts + the constructor make
+        // fresh ones each time; boostMetalReflections only tweaks intensity, it
+        // never assigns a shared envMap) — so disposing here frees nothing that
+        // another enemy still uses. disposeObject3D dedups the few materials
+        // reused across this body's own meshes.
+        disposeObject3D(this.mesh);
+        if (this.aimLine) { disposeObject3D(this.aimLine); this.aimLine = null; }
       }
       return;
     }
@@ -899,7 +905,7 @@ class Enemy {
     this.strikePending = false;
     this.dangerRing.visible = false;
     if (this.aimLine) {
-      this.scene.remove(this.aimLine);
+      disposeObject3D(this.aimLine);
       this.aimLine = null;
     }
     this.onKilled();
