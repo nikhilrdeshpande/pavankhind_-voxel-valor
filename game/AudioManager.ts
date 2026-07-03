@@ -38,7 +38,6 @@ export class AudioManager {
 
   public setMuted(muted: boolean) {
     this.muted = muted;
-    console.log('[AudioManager] setMuted', muted, 'activeChants', AudioManager.activeChants.size);
     if (this.introMasterGain) {
       this.introMasterGain.gain.setValueAtTime(muted ? 0 : 0.32, this.audioContext.currentTime);
     }
@@ -64,10 +63,8 @@ export class AudioManager {
     if (this.introChantAudio) {
       this.introChantAudio.muted = muted;
       if (muted) {
-        console.log('[AudioManager] pausing intro chant');
         this.introChantAudio.pause();
       } else {
-        console.log('[AudioManager] resuming intro chant');
         this.introChantAudio.play().catch(() => {
           // Autoplay can be blocked; user gesture will resume.
         });
@@ -102,7 +99,6 @@ export class AudioManager {
 
   public playIntroChant() {
     if (this.introChantAudio) return;
-    console.log('[AudioManager] playIntroChant');
     this.introChantAudio = new Audio('/har-har-mahadev.mp3');
     this.introChantAudio.loop = true;
     this.introChantAudio.volume = 0.7;
@@ -117,7 +113,6 @@ export class AudioManager {
 
   public stopIntroChant() {
     if (this.introChantAudio) {
-      console.log('[AudioManager] stopIntroChant');
       this.introChantAudio.pause();
       this.introChantAudio.currentTime = 0;
       AudioManager.activeChants.delete(this.introChantAudio);

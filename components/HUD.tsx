@@ -69,7 +69,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
       {isMobile && onPause && (
         <button
           onClick={onPause}
-          className="absolute z-50 w-10 h-10 rounded-full flex items-center justify-center pointer-events-auto"
+          className="absolute z-50 w-11 h-11 rounded-full flex items-center justify-center pointer-events-auto"
           style={{
             top: 'calc(4px + var(--sai-top))',
             right: 'calc(6px + var(--sai-right))',
@@ -96,7 +96,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
           {!isMobile && <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-red-300/70 w-14 text-right">{t.ui.vitality}</span>}
           {isMobile && <div style={{ width: '3px', height: '14px', background: '#ef4444', borderRadius: '1px', flexShrink: 0 }} />}
           <div className={`${isMobile ? 'h-[16px]' : 'h-[18px]'} rounded-sm relative overflow-hidden`} style={{
-            width: isMobile ? '150px' : '230px',
+            width: isMobile ? '118px' : '230px',
             background: 'linear-gradient(180deg, #1a0808 0%, #0d0404 100%)',
             border: '1px solid rgba(220,60,40,0.4)',
             boxShadow: `0 0 ${health < 40 ? '12px' : '6px'} rgba(220,60,40,${health < 40 ? 0.5 : 0.2})`,
@@ -116,7 +116,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
           {!isMobile && <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-yellow-300/70 w-14 text-right">{t.ui.spirit}</span>}
           {isMobile && <div style={{ width: '3px', height: '8px', background: '#eab308', borderRadius: '1px', flexShrink: 0 }} />}
           <div className={`${isMobile ? 'h-[10px]' : 'h-[11px]'} rounded-sm relative overflow-hidden`} style={{
-            width: isMobile ? '150px' : '230px',
+            width: isMobile ? '118px' : '230px',
             background: 'linear-gradient(180deg, #1a1400 0%, #0d0a00 100%)',
             border: '1px solid rgba(234,179,8,0.3)',
             boxShadow: '0 0 6px rgba(234,179,8,0.15)',
@@ -134,7 +134,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
           {!isMobile && <span className="text-[9px] font-bold uppercase tracking-[0.15em] w-14 text-right" style={{ color: rage >= 100 ? '#fde047' : 'rgba(249,115,22,0.7)' }}>{t.ui.valor}</span>}
           {isMobile && <div style={{ width: '3px', height: '6px', background: '#f97316', borderRadius: '1px', flexShrink: 0 }} />}
           <div className={`${isMobile ? 'h-[8px]' : 'h-[9px]'} rounded-sm relative overflow-hidden`} style={{
-            width: isMobile ? '150px' : '230px',
+            width: isMobile ? '118px' : '230px',
             background: 'linear-gradient(180deg, #1a0c00 0%, #0d0600 100%)',
             border: `1px solid ${rage >= 100 ? 'rgba(250,204,21,0.6)' : 'rgba(249,115,22,0.3)'}`,
             boxShadow: rage >= 100 ? '0 0 14px rgba(250,204,21,0.4)' : '0 0 4px rgba(249,115,22,0.15)',
@@ -278,7 +278,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
         style={{ top: isMobile ? 'calc(4px + var(--sai-top))' : '10px' }}
       >
         {/* Stage · Wave context line */}
-        <div className={`${isMobile ? 'text-[8px]' : 'text-[10px]'} uppercase tracking-[0.4em] font-bold`} style={{
+        <div className={`${isMobile ? 'text-[8px] tracking-[0.18em] max-w-[150px] truncate' : 'text-[10px] tracking-[0.4em]'} uppercase font-bold`} style={{
           color: stage === 3 ? '#fca5a5' : '#fcd34d',
           textShadow: '0 1px 4px rgba(0,0,0,0.8)',
         }}>
@@ -345,7 +345,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
 
       {/* ── Wave Transition Banner ── */}
       {waveBannerTimer > 0 && waveBanner && (
-        <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none" style={{
+        <div className={`absolute inset-0 flex justify-center z-30 pointer-events-none ${isMobile ? 'items-start pt-[16%]' : 'items-center'}`} style={{
           opacity: waveBannerTimer > 2.5 ? (3 - waveBannerTimer) * 2 : waveBannerTimer > 0.5 ? 1 : waveBannerTimer * 2,
         }}>
           <div className="text-center">
@@ -368,7 +368,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
       )}
 
       {stageBannerTimer > 0 && stageBanner && (
-        <div className="absolute inset-0 flex items-center justify-center z-[25] pointer-events-none" style={{
+        <div className={`absolute inset-0 flex justify-center z-[25] pointer-events-none ${isMobile ? 'items-start pt-[16%]' : 'items-center'}`} style={{
           opacity: stageBannerTimer > 2.8 ? (3.6 - stageBannerTimer) * 1.25 : stageBannerTimer > 0.6 ? 1 : stageBannerTimer * 1.6,
         }}>
           <div className="text-center">

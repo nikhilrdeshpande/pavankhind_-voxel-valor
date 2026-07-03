@@ -207,28 +207,40 @@ const MobileControls: React.FC<MobileControlsProps> = ({
         }}
       >
         <button
-          className="touch-none select-none flex items-center rounded-full transition-colors duration-150"
+          className="touch-none select-none flex items-center justify-center"
           style={{
-            width: '40px',
-            height: '24px',
-            background: autoAttack ? 'rgba(234,179,8,0.6)' : 'rgba(0,0,0,0.4)',
-            border: `1px solid ${autoAttack ? 'rgba(234,179,8,0.7)' : 'rgba(249,115,22,0.3)'}`,
-            padding: '2px',
+            width: '52px',
+            height: '44px',
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
           }}
           onTouchStart={(e) => {
             e.preventDefault();
             toggleAutoAttack(!autoAttack);
           }}
         >
+          {/* pill visual — tap area is the larger transparent button around it */}
           <div
-            className="rounded-full transition-transform duration-150"
+            className="flex items-center rounded-full transition-colors duration-150"
             style={{
-              width: '18px',
-              height: '18px',
-              background: autoAttack ? '#fde047' : 'rgba(249,115,22,0.5)',
-              transform: autoAttack ? 'translateX(16px)' : 'translateX(0)',
+              width: '40px',
+              height: '24px',
+              background: autoAttack ? 'rgba(234,179,8,0.6)' : 'rgba(0,0,0,0.4)',
+              border: `1px solid ${autoAttack ? 'rgba(234,179,8,0.7)' : 'rgba(249,115,22,0.3)'}`,
+              padding: '2px',
             }}
-          />
+          >
+            <div
+              className="rounded-full transition-transform duration-150"
+              style={{
+                width: '18px',
+                height: '18px',
+                background: autoAttack ? '#fde047' : 'rgba(249,115,22,0.5)',
+                transform: autoAttack ? 'translateX(16px)' : 'translateX(0)',
+              }}
+            />
+          </div>
         </button>
         <div className="text-[7px] text-orange-200/60 text-center mt-0.5 uppercase tracking-wider">Auto</div>
       </div>
@@ -300,7 +312,7 @@ const MobileControls: React.FC<MobileControlsProps> = ({
             bottom: '0px',
           }}
         >
-          <ActionButton label="Dodge" onPress={onDodge} size={42} />
+          <ActionButton label="Dodge" onPress={onDodge} size={48} />
         </div>
 
         {/* Valor — always visible, greyed when charging, gold when ready */}
