@@ -78,7 +78,8 @@ class Enemy {
     onKilled: () => void,
     onHit: (pos: THREE.Vector3, isLethal: boolean) => void,
     onArcherWindup: () => void,
-    type: EnemyType
+    type: EnemyType,
+    accent?: number
   ) {
     this.scene = scene;
     this.player = player;
@@ -186,8 +187,8 @@ class Enemy {
       runnerSash.rotation.z = 0.45;
       this.mesh.add(runnerSash);
     } else {
-      // Flat-topped Sultanate turban
-      const turbanColor = this.type === 'BOSS' ? 0x1a3a1a : 0x1a2a1a;
+      // Flat-topped Sultanate turban (sardar bosses wear their stage accent)
+      const turbanColor = this.type === 'BOSS' ? (accent ?? 0x1a3a1a) : 0x1a2a1a;
       const turbanMat = new THREE.MeshStandardMaterial({ color: turbanColor, roughness: 0.8 });
       const turbanBase = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.3, 0.15, 8), turbanMat);
       turbanBase.position.y = 2.15;
@@ -1210,7 +1211,7 @@ export class EnemyManager {
     if (navigator.vibrate) navigator.vibrate([40, 30, 60]);
   }
 
-  public spawnMiniBoss() {
+  public spawnMiniBoss(accent?: number) {
     if (this.bossActive) return;
     const startPos = new THREE.Vector3(0, 0, this.player.getPosition().z - 85);
     this.bossActive = true;
@@ -1227,7 +1228,8 @@ export class EnemyManager {
       },
       (pos, lethal) => this.spawnHitBurst(pos, lethal),
       () => this.triggerArcherWarning(),
-      'BOSS'
+      'BOSS',
+      accent
     );
     this.enemies.push(boss);
   }

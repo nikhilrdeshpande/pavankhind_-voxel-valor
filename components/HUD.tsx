@@ -21,6 +21,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
     recentPickup, pickupToastTimer,
     killStreak, streakBanner, streakBannerTimer,
     volleyWarning,
+    objectiveKind, sardarStage, sardarBannerTimer, finaleActive,
   } = stats;
 
   const prevScoreRef = useRef(score);
@@ -193,7 +194,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
               textShadow: '0 0 8px rgba(245,158,11,0.4)',
               animation: 'pulse-glow 2s ease-in-out infinite',
             }}>
-              ⚑ {t.ui.holdTheLine}
+              ⚑ {t.objectives[objectiveKind] ?? t.ui.holdTheLine}
             </div>
             <div className="mt-2 w-44 h-2.5 rounded-xs overflow-hidden" style={{
               background: 'rgba(0,0,0,0.5)',
@@ -208,6 +209,11 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
                 }}
               />
             </div>
+            {objectiveKind === 'slay' && (
+              <div className="mt-1 text-[10px] uppercase tracking-[0.3em] font-bold text-orange-200/80">
+                {Math.floor(objectiveProgress)} / {objectiveTarget}
+              </div>
+            )}
             <div className="mt-1 text-[10px] uppercase tracking-[0.3em] font-bold" style={{
               color: objectiveTimer < 5 ? '#ef4444' : '#fdba74',
               animation: objectiveTimer < 5 ? 'timer-pulse 0.5s ease-in-out infinite' : 'none',
@@ -373,13 +379,31 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
         }}>
           <div className="text-center">
             <div className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-black uppercase tracking-[0.2em]`} style={{
-              color: stage === 3 ? '#fecaca' : '#fde68a',
-              textShadow: stage === 3 ? '0 0 28px rgba(239,68,68,0.55)' : '0 0 24px rgba(245,158,11,0.45)',
+              color: finaleActive || stage === 3 ? '#fecaca' : '#fde68a',
+              textShadow: finaleActive || stage === 3 ? '0 0 28px rgba(239,68,68,0.55)' : '0 0 24px rgba(245,158,11,0.45)',
             }}>
-              {t.stages[stage]?.name ?? stageBanner}
+              {finaleActive ? t.finaleBanner : (t.stages[stage]?.name ?? stageBanner)}
             </div>
-            <div className={`mt-2 ${isMobile ? 'text-xs' : 'text-sm'} uppercase tracking-[0.32em] text-orange-100/70`}>
-              {t.stages[stage]?.directive ?? stageDirective}
+            {!finaleActive && (
+              <div className={`mt-2 ${isMobile ? 'text-xs' : 'text-sm'} uppercase tracking-[0.32em] text-orange-100/70`}>
+                {t.stages[stage]?.directive ?? stageDirective}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Sardar Intro Banner ── */}
+      {sardarBannerTimer > 0 && sardarStage > 0 && stageBannerTimer <= 0 && (
+        <div className="absolute top-[16%] left-1/2 -translate-x-1/2 z-[27] pointer-events-none" style={{
+          opacity: sardarBannerTimer > 2.6 ? (3.2 - sardarBannerTimer) * 1.7 : sardarBannerTimer > 0.5 ? 1 : sardarBannerTimer * 2,
+        }}>
+          <div className="text-center">
+            <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-black uppercase tracking-[0.25em]`} style={{
+              color: '#fda4af',
+              textShadow: '0 0 24px rgba(225,29,72,0.6)',
+            }}>
+              ⚔ {t.sardars[sardarStage]?.title}
             </div>
           </div>
         </div>

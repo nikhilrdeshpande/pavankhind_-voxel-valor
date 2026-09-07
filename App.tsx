@@ -39,6 +39,7 @@ const defaultStats: GameStats = {
   recentPickup: null, pickupToastTimer: 0,
   killStreak: 0, streakBanner: null, streakBannerTimer: 0,
   volleyWarning: 0,
+  objectiveKind: 'hold', sardarStage: 0, sardarBannerTimer: 0, finaleActive: false,
 };
 
 const PERK_POOL = ['blade', 'spirit', 'valor', 'stride', 'bloodlust', 'aegis', 'swift', 'focus'];

@@ -58,6 +58,11 @@ export interface GameStats {
   streakBanner: 'rampage' | 'unstoppable' | 'legendary' | null;
   streakBannerTimer: number;
   volleyWarning: number;
+  // Campaign beats
+  objectiveKind: 'hold' | 'slay' | 'banner';
+  sardarStage: number; // 0 = no sardar banner showing
+  sardarBannerTimer: number;
+  finaleActive: boolean;
 }
 
 export const GAME_MODES: Record<string, GameConfig> = {

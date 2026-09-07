@@ -58,6 +58,17 @@ export const strings = {
       2: { name: "शत्रूचा लोंढा", directive: "धनुर्धारी आणि ढालधारी घाटावर चालून येत आहेत." },
       3: { name: "अखेरचा प्रतिकार", directive: "तोफेचा संकेत विशालगडावर पोहोचेपर्यंत थांबा." },
     } as Record<number, { name: string; directive: string }>,
+    sardars: {
+      1: { name: "टेहळणी सरदार", title: "आघाडीचा सरदार चालून येतो!" },
+      2: { name: "लोंढ्याचा सरदार", title: "लोंढ्याचा सरदार चालून येतो!" },
+      3: { name: "खानाचा उजवा हात", title: "खानाचा उजवा हात चालून येतो!" },
+    } as Record<number, { name: string; title: string }>,
+    objectives: {
+      hold: "थांबा — रक्षा करा",
+      slay: "शत्रूंचा वध करा",
+      banner: "भगव्याचे रक्षण करा",
+    } as Record<string, string>,
+    finaleBanner: "संकेत पोहोचलाच पाहिजे!",
     tutorial: {
       move: "हलण्यासाठी WASD",
       moveMobile: "हलण्यासाठी जॉयस्टिक",
@@ -205,6 +216,17 @@ export const strings = {
       2: { name: "Enemy Surge", directive: "Archers and shield troops are pressing the pass." },
       3: { name: "Final Stand", directive: "Hold until the cannon signal reaches Vishalgad." },
     } as Record<number, { name: string; directive: string }>,
+    sardars: {
+      1: { name: "Sardar of the Vanguard", title: "The Sardar of the Vanguard approaches!" },
+      2: { name: "Sardar of the Surge", title: "The Sardar of the Surge approaches!" },
+      3: { name: "The Khan's Right Hand", title: "The Khan's Right Hand approaches!" },
+    } as Record<number, { name: string; title: string }>,
+    objectives: {
+      hold: "Hold the Line",
+      slay: "Slay the Attackers",
+      banner: "Defend the Banner",
+    } as Record<string, string>,
+    finaleBanner: "The Signal Must Be Heard!",
     tutorial: {
       move: "WASD to Move",
       moveMobile: "Joystick to Move",

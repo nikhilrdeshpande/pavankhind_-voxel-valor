@@ -22,6 +22,16 @@ export { GAME_MODES } from './GameConfig';
 
 const WAVE_DURATION = 30;
 
+// Named sardar mini-bosses, one flavor per story stage. The accent tints the
+// boss's turban so each sardar reads as a distinct commander.
+const SARDAR_ACCENTS: Record<number, number> = {
+  1: 0x2a5a2a, // vanguard green
+  2: 0x8a6a1a, // surge gold
+  3: 0x6a1a1a, // Khan's crimson
+};
+
+const FINALE_WINDOW = 20; // last N seconds of stage 3 become the signal surge
+
 // Custom vignette + damage flash + color grading shader
 const VignetteShader = {
   uniforms: {
@@ -157,6 +167,15 @@ export class PavankhindEngine {
   private objectiveCooldown = 12;
   private objectiveZoneZ = 0;
   private objectivesCompleted = 0;
+  private objectiveKind: 'hold' | 'slay' | 'banner' = 'hold';
+  private objectiveKindIndex = 0;
+  private objectiveStartScore = 0;
+  private bannerProp: THREE.Group | null = null;
+
+  // Campaign beats
+  private sardarStage = 0;
+  private sardarBannerTimer = 0;
+  private finaleActive = false;
   private lastBossWave = 0;
   private nextWeaponUpgradeScore = 5;
   private perkTimer = 60;
@@ -541,37 +560,82 @@ export class PavankhindEngine {
     const waveDifficulty = Math.max(0, this.wave - this.config.startWave);
     const timeDifficulty = Math.floor(Math.pow(elapsed / this.config.duration, 1.45) * 9) + (currentStage - 1);
     const scoreDifficulty = Math.floor(this.score / 4);
-    this.enemyManager.setDifficulty(Math.max(waveDifficulty, timeDifficulty, scoreDifficulty));
+    const finaleBump = this.finaleActive ? 3 : 0;
+    this.enemyManager.setDifficulty(Math.max(waveDifficulty, timeDifficulty, scoreDifficulty) + finaleBump);
     this.enemyManager.setStage(currentStage);
 
     if (this.wave % 3 === 0 && this.wave !== this.lastBossWave) {
       if (!this.enemyManager.isBossActive()) {
-        this.enemyManager.spawnMiniBoss();
+        // A named sardar leads each assault — accent + intro banner per stage
+        this.enemyManager.spawnMiniBoss(SARDAR_ACCENTS[currentStage]);
         this.lastBossWave = this.wave;
+        this.sardarStage = currentStage;
+        this.sardarBannerTimer = 3.2;
+        this.audioManager.playWarCry();
+        this.audioManager.playDholAccent();
       }
+    }
+    if (this.sardarBannerTimer > 0) this.sardarBannerTimer -= delta;
+
+    // Vishalgad finale: the last seconds of a stage-3 run become the signal
+    // surge — drums peak, pressure spikes, the pass must hold.
+    if (!this.finaleActive && currentStage === 3 && this.gameTime <= FINALE_WINDOW && this.gameTime > 0) {
+      this.finaleActive = true;
+      this.stageBannerTimer = 3.0; // reuse the stage banner slot for the finale call
+      this.audioManager.playCannon();
+      this.audioManager.playDholAccent();
+      this.triggerScreenFlash();
+    }
+    if (this.finaleActive) {
+      this.audioManager.setCombatIntensity(3);
     }
 
     this.objectiveCooldown = Math.max(0, this.objectiveCooldown - delta);
     if (!this.objectiveActive && this.objectiveCooldown <= 0) {
       this.objectiveActive = true;
       this.objectiveProgress = 0;
-      this.objectiveTimer = 18;
       this.objectiveZoneZ = this.player.getPosition().z;
+      // Rotate through objective flavors so "hold the line" doesn't repeat forever
+      const kinds: Array<'hold' | 'slay' | 'banner'> = ['hold', 'slay', 'banner'];
+      this.objectiveKind = kinds[this.objectiveKindIndex % kinds.length];
+      this.objectiveKindIndex++;
+      if (this.objectiveKind === 'slay') {
+        this.objectiveTarget = 6; // kills within the window
+        this.objectiveTimer = 20;
+        this.objectiveStartScore = this.score;
+      } else {
+        this.objectiveTarget = 12; // seconds in the zone
+        this.objectiveTimer = 18;
+        if (this.objectiveKind === 'banner') {
+          this.spawnBannerProp(this.objectiveZoneZ);
+        }
+      }
     }
 
     if (this.objectiveActive) {
       this.objectiveTimer -= delta;
-      const playerZ = this.player.getPosition().z;
-      if (Math.abs(playerZ - this.objectiveZoneZ) < 15) {
-        this.objectiveProgress += delta;
+      if (this.objectiveKind === 'slay') {
+        this.objectiveProgress = this.score - this.objectiveStartScore;
+      } else {
+        const playerZ = this.player.getPosition().z;
+        if (Math.abs(playerZ - this.objectiveZoneZ) < 15) {
+          this.objectiveProgress += delta;
+        }
       }
       if (this.objectiveProgress >= this.objectiveTarget) {
         this.objectivesCompleted += 1;
         this.score += 15;
         this.audioManager.playObjectiveComplete();
+        if (this.bannerProp) {
+          // Victory flourish on the saved banner
+          this.particlePool.emit(24, this.bannerProp.position.clone().add(new THREE.Vector3(0, 2.5, 0)),
+            { x: 3, y: 4, z: 3 }, [0.3, 0.6], new THREE.Color(0xff6600), [0.8, 1.5], 6);
+        }
+        this.removeBannerProp();
         this.objectiveActive = false;
         this.objectiveCooldown = 22;
       } else if (this.objectiveTimer <= 0) {
+        this.removeBannerProp();
         this.objectiveActive = false;
         this.objectiveCooldown = 18;
       }
@@ -693,7 +757,11 @@ export class PavankhindEngine {
       this.stageBannerTimer = stage === 1 ? 3.0 : 3.6;
       this.prevStage = stage;
       if (stage > 1) {
+        // Stage set-piece: a cannon signal marks each act of the stand
+        this.audioManager.playCannon();
         this.audioManager.playDholAccent();
+        this.audioManager.playWarCry();
+        this.triggerScreenFlash();
       }
     }
     if (this.stageBannerTimer > 0) this.stageBannerTimer -= delta;
@@ -742,6 +810,10 @@ export class PavankhindEngine {
       streakBanner: this.streakBannerTimer > 0 ? this.streakBanner : null,
       streakBannerTimer: this.streakBannerTimer,
       volleyWarning: this.volleyZones.length > 0 ? this.volleyWarnTimer : 0,
+      objectiveKind: this.objectiveKind,
+      sardarStage: this.sardarBannerTimer > 0 ? this.sardarStage : 0,
+      sardarBannerTimer: this.sardarBannerTimer,
+      finaleActive: this.finaleActive,
     });
 
     if (this.player.getHealth() <= 0 && !this.deathSequenceActive) {
@@ -817,6 +889,48 @@ export class PavankhindEngine {
     if (playerHit) this.player.takeDamage(18);
     this.audioManager.playBruteSlam();
     this.volleyTimer = 24 + Math.random() * 12;
+  }
+
+  /** Saffron banner planted in the objective zone for 'banner' objectives. */
+  private spawnBannerProp(z: number) {
+    this.removeBannerProp();
+    const group = new THREE.Group();
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.08, 4.2, 6),
+      new THREE.MeshStandardMaterial({ color: 0x4a2a12, roughness: 0.85 })
+    );
+    pole.position.y = 2.1;
+    group.add(pole);
+    // Swallow-tailed saffron flag
+    const flagShape = new THREE.Shape();
+    flagShape.moveTo(0, 0);
+    flagShape.lineTo(1.7, -0.35);
+    flagShape.lineTo(1.15, -0.65);
+    flagShape.lineTo(1.7, -0.95);
+    flagShape.lineTo(0, -1.3);
+    flagShape.closePath();
+    const flag = new THREE.Mesh(
+      new THREE.ShapeGeometry(flagShape),
+      new THREE.MeshStandardMaterial({
+        color: 0xff6600, emissive: 0xff4400, emissiveIntensity: 0.25,
+        side: THREE.DoubleSide, roughness: 0.7,
+      })
+    );
+    flag.position.set(0.06, 4.1, 0);
+    group.add(flag);
+    const glow = new THREE.PointLight(0xff8833, 6, 9);
+    glow.position.y = 3.5;
+    group.add(glow);
+    group.position.set(0, 0, z);
+    this.scene.add(group);
+    this.bannerProp = group;
+  }
+
+  private removeBannerProp() {
+    if (!this.bannerProp) return;
+    this.scene.remove(this.bannerProp);
+    disposeObject3D(this.bannerProp);
+    this.bannerProp = null;
   }
 
   private registerKillStreak() {
@@ -987,6 +1101,7 @@ export class PavankhindEngine {
     this.renderer.domElement.removeEventListener('webglcontextlost', this.boundContextLost);
     this.renderer.domElement.removeEventListener('webglcontextrestored', this.boundContextRestored);
     clearTransientVfx();
+    this.removeBannerProp();
     this.inputManager.dispose();
     this.audioManager.stopCombatDhol();
     this.audioManager.stopIntroMusic();
