@@ -11,10 +11,12 @@ This document describes the core gameplay systems, terms, and UI elements.
 
 ## Combat Basics
 
-- Strike: Left Click.
+- Strike: Left Click (tap).
+- Heavy Strike: hold Left Click ~0.35s and release — more damage, smashes Shielder guards (auto-fires if held ~0.9s).
 - Block: Right Click (holds the shield stance).
-- Parry: Tap Right Click at impact to negate damage.
-- Dodge: `Space` for a short burst with i-frames.
+- Parry: Tap Right Click at impact to negate damage. A successful parry arms a 1s **riposte** — your next swing is a guaranteed empowered heavy.
+- Dodge: `Space` for a short burst with i-frames. A **perfect dodge** (started just before a hit lands) grants brief slow-mo, +25 stamina, and +10 valor.
+- Finisher: non-boss enemies below 20% HP stagger and glow gold — the next hit executes them.
 
 ## Valor
 
@@ -50,7 +52,7 @@ This document describes the core gameplay systems, terms, and UI elements.
 
 ## Perk Choices
 
-- Every 60 seconds, pick one of three perks:
+- First perk at 30 seconds, then every 45 seconds — pick one of three:
   - Blade of Bhavani: +20% damage.
   - Steel Spirit: +40% stamina regen + instant heal.
   - War Cry: +30% Valor gain.
