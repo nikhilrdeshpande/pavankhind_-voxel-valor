@@ -18,17 +18,19 @@ export interface BattlePassReward {
 export const SEASON_NAME = 'Pavankhind';
 export const SEASON_NAME_MR = 'पावनखिंड';
 
+// Tuned to real kill rates (~25 kills per Skirmish run): tier 10 lands
+// around 15-18 runs instead of the old 750-kill grind.
 export const BATTLE_PASS_TIERS: BattlePassTier[] = [
   { tier: 1, killsRequired: 10, reward: { type: 'coins', amount: 15, name: '15 Coins', nameMr: '१५ नाणी' } },
-  { tier: 2, killsRequired: 30, reward: { type: 'coins', amount: 25, name: '25 Coins', nameMr: '२५ नाणी' } },
-  { tier: 3, killsRequired: 60, reward: { type: 'sword_skin', id: 'bhavani', name: 'Bhavani Talwar', nameMr: 'भवानी तलवार' } },
-  { tier: 4, killsRequired: 100, reward: { type: 'coins', amount: 30, name: '30 Coins', nameMr: '३० नाणी' } },
-  { tier: 5, killsRequired: 150, reward: { type: 'angarkha_skin', id: 'saffron', name: 'Saffron Warrior', nameMr: 'भगवा योद्धा' } },
-  { tier: 6, killsRequired: 220, reward: { type: 'coins', amount: 40, name: '40 Coins', nameMr: '४० नाणी' } },
-  { tier: 7, killsRequired: 300, reward: { type: 'sword_skin', id: 'wagh_nakh', name: 'Wagh Nakh', nameMr: 'वाघनख' } },
-  { tier: 8, killsRequired: 400, reward: { type: 'coins', amount: 50, name: '50 Coins', nameMr: '५० नाणी' } },
-  { tier: 9, killsRequired: 550, reward: { type: 'angarkha_skin', id: 'forest', name: 'Forest Green', nameMr: 'वनहिरवा' } },
-  { tier: 10, killsRequired: 750, reward: { type: 'coins', amount: 100, name: '100 Coins', nameMr: '१०० नाणी' } },
+  { tier: 2, killsRequired: 25, reward: { type: 'coins', amount: 25, name: '25 Coins', nameMr: '२५ नाणी' } },
+  { tier: 3, killsRequired: 45, reward: { type: 'sword_skin', id: 'bhavani', name: 'Bhavani Talwar', nameMr: 'भवानी तलवार' } },
+  { tier: 4, killsRequired: 70, reward: { type: 'coins', amount: 30, name: '30 Coins', nameMr: '३० नाणी' } },
+  { tier: 5, killsRequired: 100, reward: { type: 'angarkha_skin', id: 'saffron', name: 'Saffron Warrior', nameMr: 'भगवा योद्धा' } },
+  { tier: 6, killsRequired: 140, reward: { type: 'coins', amount: 40, name: '40 Coins', nameMr: '४० नाणी' } },
+  { tier: 7, killsRequired: 190, reward: { type: 'sword_skin', id: 'wagh_nakh', name: 'Wagh Nakh', nameMr: 'वाघनख' } },
+  { tier: 8, killsRequired: 250, reward: { type: 'coins', amount: 50, name: '50 Coins', nameMr: '५० नाणी' } },
+  { tier: 9, killsRequired: 320, reward: { type: 'angarkha_skin', id: 'forest', name: 'Forest Green', nameMr: 'वनहिरवा' } },
+  { tier: 10, killsRequired: 400, reward: { type: 'coins', amount: 100, name: '100 Coins', nameMr: '१०० नाणी' } },
 ];
 
 export interface BattlePassState {

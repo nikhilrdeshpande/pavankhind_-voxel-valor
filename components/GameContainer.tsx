@@ -25,6 +25,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ active, onEnd, onUpdateSt
   onEngineReadyRef.current = onEngineReady;
 
   const [initError, setInitError] = useState(false);
+  const [runtimeError, setRuntimeError] = useState(false);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -35,6 +36,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ active, onEnd, onUpdateSt
         onWin: () => onEndRef.current('WON'),
         onLoss: () => onEndRef.current('LOST'),
         onStatsUpdate: (s) => onUpdateStatsRef.current(s),
+        onFatalError: () => setRuntimeError(true),
       }, gameConfig);
     } catch (err) {
       // WebGL unavailable (old device, blocked context) — show a message, not a black screen
@@ -59,14 +61,24 @@ const GameContainer: React.FC<GameContainerProps> = ({ active, onEnd, onUpdateSt
     }
   }, [active]);
 
-  if (initError) {
+  if (initError || runtimeError) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-black text-center px-6">
         <div>
           <div className="text-2xl font-black uppercase tracking-widest text-orange-200">Pavankhind</div>
           <div className="mt-3 text-sm text-orange-100/80">
-            Your browser could not start 3D graphics (WebGL). Try updating your browser or enabling hardware acceleration.
+            {initError
+              ? 'Your browser could not start 3D graphics (WebGL). Try updating your browser or enabling hardware acceleration.'
+              : 'The battle was interrupted by a graphics error. Reload to rejoin the pass.'}
           </div>
+          {runtimeError && (
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-6 border border-orange-500/70 px-8 py-3 text-sm font-bold uppercase tracking-widest text-orange-200 transition-all hover:bg-orange-500 hover:text-black"
+            >
+              Reload
+            </button>
+          )}
         </div>
       </div>
     );

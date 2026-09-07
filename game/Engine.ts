@@ -124,6 +124,8 @@ export interface GameCallbacks {
   onWin: () => void;
   onLoss: () => void;
   onStatsUpdate: (stats: GameStats) => void;
+  /** The engine can no longer render (GPU crash loop, unrecoverable context loss). */
+  onFatalError?: (kind: 'context-lost' | 'crash') => void;
 }
 
 export class PavankhindEngine {
@@ -187,6 +189,14 @@ export class PavankhindEngine {
   private winSequenceActive = false;
   private winTimer = 0;
   private endReported = false; // guard: onWin/onLoss must fire exactly once
+
+  // Crash/context-loss guards
+  private consecutiveUpdateErrors = 0;
+  private static readonly MAX_UPDATE_ERRORS = 5;
+  private contextLost = false;
+  private fatalReported = false;
+  private boundContextLost!: (e: Event) => void;
+  private boundContextRestored!: () => void;
 
   // Kill streaks
   private killStreak = 0;
@@ -311,6 +321,27 @@ export class PavankhindEngine {
 
     this.boundResize = this.onWindowResize.bind(this);
     window.addEventListener('resize', this.boundResize);
+
+    // WebGL context loss: pause the loop instead of freezing on a black canvas.
+    // preventDefault() tells the browser we want the restored event.
+    this.boundContextLost = (e: Event) => {
+      e.preventDefault();
+      this.contextLost = true;
+      if (this.frameId !== null) {
+        cancelAnimationFrame(this.frameId);
+        this.frameId = null;
+      }
+    };
+    this.boundContextRestored = () => {
+      if (!this.contextLost) return;
+      this.contextLost = false;
+      this.clock.getDelta(); // swallow the pause so dt doesn't spike
+      this.onWindowResize(); // force renderer/composer to rebuild targets
+      if (this.frameId === null) this.render();
+    };
+    canvas.addEventListener('webglcontextlost', this.boundContextLost);
+    canvas.addEventListener('webglcontextrestored', this.boundContextRestored);
+
     this.render();
   }
 
@@ -919,8 +950,20 @@ export class PavankhindEngine {
   private render() {
     try {
       this.update();
+      this.consecutiveUpdateErrors = 0;
     } catch (err) {
       console.error('[PavankhindEngine] update error:', err);
+      this.consecutiveUpdateErrors++;
+      if (this.consecutiveUpdateErrors >= PavankhindEngine.MAX_UPDATE_ERRORS) {
+        // Every frame is throwing — stop the loop and surface it instead of
+        // spamming the console forever behind a frozen canvas.
+        this.frameId = null;
+        if (!this.fatalReported) {
+          this.fatalReported = true;
+          this.callbacks.onFatalError?.('crash');
+        }
+        return;
+      }
     }
 
     // When game is not active (menu screens), keep camera stable
@@ -941,6 +984,8 @@ export class PavankhindEngine {
   public dispose() {
     if (this.frameId) cancelAnimationFrame(this.frameId);
     window.removeEventListener('resize', this.boundResize);
+    this.renderer.domElement.removeEventListener('webglcontextlost', this.boundContextLost);
+    this.renderer.domElement.removeEventListener('webglcontextrestored', this.boundContextRestored);
     clearTransientVfx();
     this.inputManager.dispose();
     this.audioManager.stopCombatDhol();
