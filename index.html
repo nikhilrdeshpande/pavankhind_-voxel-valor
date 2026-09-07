@@ -5,34 +5,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content, viewport-fit=cover">
   <title>Pavankhind: The Last Stand</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Spectral:wght@300;400;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { margin: 0; overflow: hidden; background: #000; }
-    canvas { display: block; }
-    @keyframes vignette-pulse {
-      0%, 100% { opacity: 0.2; }
-      50% { opacity: 0.5; }
-    }
-    .vignette-low-health {
-      animation: vignette-pulse 1s infinite;
-      background: radial-gradient(circle, transparent 40%, rgba(139, 0, 0, 0.8) 100%);
-    }
-  </style>
-<link rel="stylesheet" href="/index.css">
-<script>
-  // Dev: add ?mobile to URL to force mobile mode on desktop for testing
-  if (new URLSearchParams(location.search).has('mobile')) {
-    var origMM = window.matchMedia;
-    window.matchMedia = function(q) {
-      if (q === '(pointer: coarse)') return { matches: true, media: q, onchange: null, addListener: function(){}, removeListener: function(){}, addEventListener: function(){}, removeEventListener: function(){}, dispatchEvent: function(){ return true; } };
-      return origMM.call(window, q);
-    };
-    Object.defineProperty(navigator, 'maxTouchPoints', { get: function(){ return 5; }, configurable: true });
-  }
-</script>
+  <meta name="description" content="Defend the mountain pass as Baji Prabhu Deshpande. 300 against 10,000 — hold until the third cannon cries. A voxel action game.">
+  <meta name="theme-color" content="#0a0706">
+  <link rel="icon" type="image/svg+xml" href="/pavankhind-hero.svg">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Pavankhind: The Last Stand">
+  <meta property="og:description" content="Defend the mountain pass as Baji Prabhu Deshpande. 300 against 10,000 — hold until the third cannon cries.">
+  <meta property="og:image" content="https://pavankhind.bobhata.com/pavankhind-reference.png">
+  <meta property="og:url" content="https://pavankhind.bobhata.com">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <link rel="stylesheet" href="/index.css">
+  <script src="/mobile-shim.js"></script>
 </head>
 <body>
   <div class="rotate-prompt">
@@ -45,35 +29,6 @@
   </div>
   <div id="root"></div>
 <script type="module" src="/index.tsx"></script>
-<script>
-  // Enter fullscreen + lock landscape on first user interaction (mobile)
-  function enterFullscreenLandscape() {
-    var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ||
-      (navigator.maxTouchPoints > 0 && window.matchMedia('(pointer: coarse)').matches);
-    if (!isMobile) return;
-    var el = document.documentElement;
-    var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-    if (rfs) {
-      rfs.call(el).then(function() {
-        if (screen.orientation && screen.orientation.lock) {
-          screen.orientation.lock('landscape').catch(function() {});
-        }
-        // Trigger resize so Three.js renderer updates
-        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
-        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 500);
-      }).catch(function() {});
-    }
-  }
-  document.addEventListener('click', enterFullscreenLandscape, { once: true });
-  document.addEventListener('touchstart', enterFullscreenLandscape, { once: true });
-
-  // Re-trigger resize on fullscreen change so renderer adapts
-  document.addEventListener('fullscreenchange', function() {
-    setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
-  });
-  document.addEventListener('webkitfullscreenchange', function() {
-    setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
-  });
-</script>
+<script src="/fullscreen.js"></script>
 </body>
 </html>

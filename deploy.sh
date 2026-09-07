@@ -1,29 +1,61 @@
 #!/bin/bash
 # Deploy Pavankhind to pavankhind.bobhata.com
-# Usage: ./deploy.sh
+#
+# Builds locally, rsyncs the dist/ artifact to a timestamped release dir on the
+# server, and atomically swaps a `current` symlink. Rollback = repoint the
+# symlink at the previous release.
+#
+# Server prerequisites (one-time, as root):
+#   useradd -m -s /bin/bash deploy
+#   mkdir -p /var/www/pavankhind.bobhata.com/releases
+#   chown -R deploy:deploy /var/www/pavankhind.bobhata.com
+#   # install deploy's SSH public key in /home/deploy/.ssh/authorized_keys
+#   # point nginx root at /var/www/pavankhind.bobhata.com/current
+#
+# Local prerequisites:
+#   # pin the server host key once (no blind StrictHostKeyChecking=no):
+#   ssh-keyscan -H pavankhind.bobhata.com >> ~/.ssh/known_hosts
+#
+# Usage: ./deploy.sh           deploy HEAD
+#        ./deploy.sh rollback  swap back to the previous release
 
-set -e
+set -euo pipefail
 
-SERVER="root@150.241.246.206"
-DEPLOY_PATH="/var/www/pavankhind.bobhata.com"
-SSH_KEY="/root/.ssh/pavankhind_deploy"
+SERVER="${DEPLOY_SERVER:-deploy@pavankhind.bobhata.com}"
+BASE="/var/www/pavankhind.bobhata.com"
+KEEP_RELEASES=5
 
-echo "🏰 Deploying Pavankhind to pavankhind.bobhata.com..."
+if [[ "${1:-}" == "rollback" ]]; then
+  ssh "$SERVER" bash -s <<REMOTE
+set -euo pipefail
+cd "$BASE"
+prev=\$(ls -1dt releases/*/ | sed -n 2p)
+[[ -n "\$prev" ]] || { echo "No previous release to roll back to"; exit 1; }
+ln -sfn "\$PWD/\${prev%/}" current
+echo "Rolled back to \${prev%/}"
+REMOTE
+  exit 0
+fi
 
-ssh -o StrictHostKeyChecking=no $SERVER bash -s << 'REMOTE'
-set -e
-cd /var/www/pavankhind.bobhata.com
-
-echo "📥 Pulling latest code..."
-GIT_SSH_COMMAND='ssh -i /root/.ssh/pavankhind_deploy -o StrictHostKeyChecking=no' git pull
-
-echo "📦 Installing dependencies..."
-npm install --production=false
-
-echo "🔨 Building..."
+echo "🔨 Building locally..."
+npm ci
+npx tsc --noEmit
 npm run build
 
-echo ""
-echo "✅ Deploy complete!"
-echo "🌐 https://pavankhind.bobhata.com"
+RELEASE="$(date +%Y%m%d%H%M%S)-$(git rev-parse --short HEAD)"
+
+echo "📦 Uploading release $RELEASE..."
+rsync -az --delete dist/ "$SERVER:$BASE/releases/$RELEASE/"
+
+echo "🔁 Activating..."
+ssh "$SERVER" bash -s <<REMOTE
+set -euo pipefail
+cd "$BASE"
+ln -sfn "\$PWD/releases/$RELEASE" current
+# prune old releases beyond the last $KEEP_RELEASES
+ls -1dt releases/*/ | tail -n +$((KEEP_RELEASES + 1)) | xargs -r rm -rf
 REMOTE
+
+echo ""
+echo "✅ Deployed $RELEASE"
+echo "🌐 https://pavankhind.bobhata.com"

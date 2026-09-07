@@ -12,7 +12,7 @@ import MobileControls from './components/MobileControls';
 import type { PavankhindEngine } from './game/Engine';
 import type { GameStats } from './game/GameConfig';
 import { GAME_MODES } from './game/GameConfig';
-import { loadProfile, saveProfile, processRunEnd } from './game/Progression';
+import { loadProfile, processRunEnd } from './game/Progression';
 import type { PlayerProfile } from './game/Progression';
 import { strings } from './localization/strings';
 import type { Lang } from './localization/strings';
@@ -20,7 +20,6 @@ import { getDailyConfig, completeDailyChallenge } from './game/DailyChallenge';
 import { checkAchievements } from './game/Achievements';
 import type { Achievement } from './game/Achievements';
 import AchievementToast from './components/AchievementToast';
-import { AdManager } from './monetization/AdManager';
 import StoreScreen from './components/StoreScreen';
 import BattlePassScreen from './components/BattlePassScreen';
 import { addSeasonKills } from './monetization/BattlePass';
@@ -78,7 +77,6 @@ const App: React.FC = () => {
   const [lang, setLang] = useState<Lang>('mr');
   const [isDailyMode, setIsDailyMode] = useState(false);
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
-  const [canDoubleCoins, setCanDoubleCoins] = useState(true);
   const [showStore, setShowStore] = useState(false);
   const [showBattlePass, setShowBattlePass] = useState(false);
   const engineRef = useRef<PavankhindEngine | null>(null);
@@ -282,7 +280,6 @@ const App: React.FC = () => {
   const handleSelectMode = useCallback((key: string) => {
     setSelectedModeKey(key);
     setIsDailyMode(false);
-    setCanDoubleCoins(true);
     setStats(defaultStats);
     setGameKey(k => k + 1);
     setStatus('PLAYING');
@@ -291,26 +288,10 @@ const App: React.FC = () => {
   const handleSelectDaily = useCallback(() => {
     setSelectedModeKey('daily');
     setIsDailyMode(true);
-    setCanDoubleCoins(true);
     setStats(defaultStats);
     setGameKey(k => k + 1);
     setStatus('PLAYING');
   }, []);
-
-  const handleDoubleCoins = useCallback(() => {
-    AdManager.getInstance().showRewardedAd('double_coins', (rewarded) => {
-      if (rewarded) {
-        setCanDoubleCoins(false);
-        // Persist the bonus (equal to the base run coins) before touching state,
-        // so the reward survives a reload. Keep side-effects out of the updater.
-        const p = loadProfile();
-        p.currency += lastRunCoins;
-        saveProfile(p);
-        setProfile({ ...p });
-        setLastRunCoins(prev => prev * 2);
-      }
-    });
-  }, [lastRunCoins]);
 
   const handleShareDownload = useCallback(async () => {
     const canvas = document.createElement('canvas');
@@ -562,7 +543,6 @@ const App: React.FC = () => {
           profile={profile}
           lastRunCoins={lastRunCoins}
           lastRunNewBest={lastRunNewBest}
-          canDoubleCoins={canDoubleCoins}
           isMobile={isMobile}
           onViewScorecard={() => setStatus('WON')}
           onShare={handleShareDownload}
@@ -570,7 +550,6 @@ const App: React.FC = () => {
             setProfile(loadProfile());
             setStatus('MODE_SELECT');
           }}
-          onDoubleCoins={handleDoubleCoins}
           onOpenStore={() => setShowStore(true)}
         />
       )}

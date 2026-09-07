@@ -104,7 +104,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
             </div>
             <button
               onClick={onClose}
-              className="px-4 py-2 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs rounded-sm"
+              className="px-4 py-2 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs rounded-xs"
               style={{ border: '1.5px solid rgba(249,115,22,0.5)', background: 'rgba(0,0,0,0.3)' }}
             >
               ← Back
@@ -156,7 +156,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
               return (
                 <div
                   key={skin.id}
-                  className="p-4 transition-all rounded-sm hover:translate-y-[-2px]"
+                  className="p-4 transition-all rounded-xs hover:translate-y-[-2px]"
                   style={{
                     border: equipped ? '2px solid rgba(234,179,8,0.6)' : rarity.border,
                     background: equipped ? 'linear-gradient(135deg, rgba(234,179,8,0.1) 0%, rgba(0,0,0,0.4) 100%)' : rarity.bg,
@@ -165,7 +165,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className="w-14 h-14 rounded-sm flex-shrink-0"
+                      className="w-14 h-14 rounded-xs flex-shrink-0"
                       style={{
                         backgroundColor: colorHex,
                         boxShadow: `0 0 16px ${colorHex}50, inset 0 0 20px rgba(255,255,255,0.1)`,
@@ -193,7 +193,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
                         <button
                           onClick={() => handleBuySword(skin.id)}
                           disabled={profile.currency < skin.cost}
-                          className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-sm transition-all"
+                          className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-xs transition-all"
                           style={profile.currency >= skin.cost ? {
                             background: 'linear-gradient(135deg, #b45309, #d97706)',
                             color: '#fef3c7',
@@ -211,7 +211,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
                       {owned && !equipped && (
                         <button
                           onClick={() => handleEquipSword(skin.id)}
-                          className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-sm transition-all"
+                          className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-xs transition-all"
                           style={{
                             border: '1px solid rgba(249,115,22,0.5)',
                             color: '#fdba74',
@@ -234,7 +234,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
               return (
                 <div
                   key={skin.id}
-                  className="p-4 transition-all rounded-sm hover:translate-y-[-2px]"
+                  className="p-4 transition-all rounded-xs hover:translate-y-[-2px]"
                   style={{
                     border: equipped ? '2px solid rgba(234,179,8,0.6)' : rarity.border,
                     background: equipped ? 'linear-gradient(135deg, rgba(234,179,8,0.1) 0%, rgba(0,0,0,0.4) 100%)' : rarity.bg,
@@ -243,7 +243,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className="w-14 h-14 rounded-sm flex-shrink-0"
+                      className="w-14 h-14 rounded-xs flex-shrink-0"
                       style={{
                         backgroundColor: colorHex,
                         boxShadow: `0 0 16px ${colorHex}50, inset 0 0 20px rgba(255,255,255,0.1)`,
@@ -271,7 +271,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
                         <button
                           onClick={() => handleBuyAngarkha(skin.id)}
                           disabled={profile.currency < skin.cost}
-                          className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-sm transition-all"
+                          className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-xs transition-all"
                           style={profile.currency >= skin.cost ? {
                             background: 'linear-gradient(135deg, #b45309, #d97706)',
                             color: '#fef3c7',
@@ -289,7 +289,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
                       {owned && !equipped && (
                         <button
                           onClick={() => handleEquipAngarkha(skin.id)}
-                          className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-sm transition-all"
+                          className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-xs transition-all"
                           style={{
                             border: '1px solid rgba(249,115,22,0.5)',
                             color: '#fdba74',
@@ -308,7 +308,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
               <>
                 {/* Dual sword option */}
                 <div
-                  className="p-4 transition-all rounded-sm hover:translate-y-[-2px]"
+                  className="p-4 transition-all rounded-xs hover:translate-y-[-2px]"
                   style={{
                     border: cosState.equippedLeftHand === 'sword' ? '2px solid rgba(234,179,8,0.6)' : '1px solid rgba(249,115,22,0.2)',
                     background: cosState.equippedLeftHand === 'sword' ? 'linear-gradient(135deg, rgba(234,179,8,0.1) 0%, rgba(0,0,0,0.4) 100%)' : 'linear-gradient(135deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.4) 100%)',
@@ -316,7 +316,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
                   }}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-sm flex-shrink-0 flex items-center justify-center text-2xl" style={{
+                    <div className="w-14 h-14 rounded-xs flex-shrink-0 flex items-center justify-center text-2xl" style={{
                       background: 'linear-gradient(135deg, rgba(238,238,238,0.15), rgba(0,0,0,0.3))',
                       border: '1px solid rgba(255,255,255,0.1)',
                     }}>⚔</div>
@@ -332,7 +332,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
                     {cosState.equippedLeftHand !== 'sword' && (
                       <button
                         onClick={handleEquipDualSword}
-                        className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-sm transition-all"
+                        className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-xs transition-all"
                         style={{
                           border: '1px solid rgba(249,115,22,0.5)',
                           color: '#fdba74',
@@ -355,7 +355,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
                   return (
                     <div
                       key={skin.id}
-                      className="p-4 transition-all rounded-sm hover:translate-y-[-2px]"
+                      className="p-4 transition-all rounded-xs hover:translate-y-[-2px]"
                       style={{
                         border: equipped ? '2px solid rgba(234,179,8,0.6)' : rarity.border,
                         background: equipped ? 'linear-gradient(135deg, rgba(234,179,8,0.1) 0%, rgba(0,0,0,0.4) 100%)' : rarity.bg,
@@ -392,7 +392,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
                             <button
                               onClick={() => handleBuyShield(skin.id)}
                               disabled={profile.currency < skin.cost}
-                              className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-sm transition-all"
+                              className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-xs transition-all"
                               style={profile.currency >= skin.cost ? {
                                 background: 'linear-gradient(135deg, #b45309, #d97706)',
                                 color: '#fef3c7',
@@ -410,7 +410,7 @@ const StoreScreen: React.FC<StoreScreenProps> = ({ t, lang, profile, onProfileUp
                           {owned && !equipped && (
                             <button
                               onClick={() => handleEquipShield(skin.id)}
-                              className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-sm transition-all"
+                              className="px-4 py-1.5 text-[11px] uppercase tracking-widest font-bold rounded-xs transition-all"
                               style={{
                                 border: '1px solid rgba(249,115,22,0.5)',
                                 color: '#fdba74',

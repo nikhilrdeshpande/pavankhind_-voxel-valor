@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   color-scheme: dark;
   --ember: #f97316;
@@ -20,6 +22,12 @@ body {
   position: fixed;
   inset: 0;
   overflow: hidden;
+  margin: 0;
+  background: #000;
+}
+
+canvas {
+  display: block;
 }
 
 /* Use dynamic viewport height for true fullscreen on mobile */

@@ -82,7 +82,7 @@ const BattlePassScreen: React.FC<BattlePassScreenProps> = ({ t, lang, profile, o
             </div>
             <button
               onClick={onClose}
-              className="px-4 py-2 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs rounded-sm"
+              className="px-4 py-2 text-orange-200 hover:bg-orange-500 hover:text-black transition-all btn-juice font-bold uppercase tracking-widest text-xs rounded-xs"
               style={{ border: '1.5px solid rgba(249,115,22,0.5)', background: 'rgba(0,0,0,0.3)' }}
             >
               ← Back
@@ -97,7 +97,7 @@ const BattlePassScreen: React.FC<BattlePassScreenProps> = ({ t, lang, profile, o
               return (
                 <div
                   key={tier.tier}
-                  className="flex items-center justify-between p-3 transition-all rounded-sm"
+                  className="flex items-center justify-between p-3 transition-all rounded-xs"
                   style={{
                     border: claimed ? '1.5px solid rgba(34,197,94,0.4)' : canClaim ? '1.5px solid rgba(234,179,8,0.6)' : reached ? '1.5px solid rgba(234,179,8,0.3)' : '1px solid rgba(249,115,22,0.15)',
                     background: claimed
@@ -137,7 +137,7 @@ const BattlePassScreen: React.FC<BattlePassScreenProps> = ({ t, lang, profile, o
                     {canClaim && (
                       <button
                         onClick={() => handleClaim(tier.tier)}
-                        className="px-4 py-1.5 text-xs uppercase tracking-widest font-bold rounded-sm transition-all"
+                        className="px-4 py-1.5 text-xs uppercase tracking-widest font-bold rounded-xs transition-all"
                         style={{
                           background: 'linear-gradient(135deg, #b45309, #d97706)',
                           color: '#fef3c7',

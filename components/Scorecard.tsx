@@ -14,12 +14,10 @@ interface ScorecardProps {
   profile: PlayerProfile;
   lastRunCoins: number;
   lastRunNewBest: boolean;
-  canDoubleCoins: boolean;
   isMobile?: boolean;
   onViewScorecard: () => void;
   onShare: () => void;
   onPlayAgain: () => void;
-  onDoubleCoins: () => void;
   onOpenStore: () => void;
 }
 
@@ -43,8 +41,8 @@ function useCountUp(target: number, duration = 1200, delay = 0) {
 }
 
 const Scorecard: React.FC<ScorecardProps> = ({
-  t, status, stats, profile, lastRunCoins, lastRunNewBest, canDoubleCoins, isMobile,
-  onViewScorecard, onShare, onPlayAgain, onDoubleCoins, onOpenStore,
+  t, status, stats, profile, lastRunCoins, lastRunNewBest, isMobile,
+  onViewScorecard, onShare, onPlayAgain, onOpenStore,
 }) => {
   const { score, maxCombo, damageTaken, valorStrikes, objectivesCompleted } = stats;
 
@@ -193,7 +191,7 @@ const Scorecard: React.FC<ScorecardProps> = ({
           }}>
             <div className={`${isMobile ? 'mt-3 gap-2 text-xs' : 'mt-6 gap-3 text-sm'} flex flex-wrap justify-center`}>
               {damageTaken < 40 && (
-                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-sm font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
+                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-xs font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
                   background: 'linear-gradient(135deg, rgba(192,192,192,0.1), rgba(0,0,0,0.3))',
                   border: '1.5px solid rgba(192,192,192,0.4)',
                   color: '#e5e7eb',
@@ -203,7 +201,7 @@ const Scorecard: React.FC<ScorecardProps> = ({
                 </span>
               )}
               {maxCombo >= 8 && (
-                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-sm font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
+                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-xs font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
                   background: 'linear-gradient(135deg, rgba(212,160,23,0.15), rgba(0,0,0,0.3))',
                   border: '1.5px solid rgba(212,160,23,0.5)',
                   color: '#fde68a',
@@ -213,7 +211,7 @@ const Scorecard: React.FC<ScorecardProps> = ({
                 </span>
               )}
               {valorStrikes >= 1 && (
-                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-sm font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
+                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-xs font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
                   background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(0,0,0,0.3))',
                   border: '1.5px solid rgba(249,115,22,0.5)',
                   color: '#fdba74',
@@ -223,7 +221,7 @@ const Scorecard: React.FC<ScorecardProps> = ({
                 </span>
               )}
               {objectivesCompleted >= 1 && (
-                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-sm font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
+                <span className={`${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-xs font-bold uppercase tracking-wider flex items-center gap-1.5`} style={{
                   background: 'linear-gradient(135deg, rgba(192,192,192,0.1), rgba(0,0,0,0.3))',
                   border: '1.5px solid rgba(192,192,192,0.4)',
                   color: '#e5e7eb',
@@ -242,20 +240,6 @@ const Scorecard: React.FC<ScorecardProps> = ({
             transition: 'all 0.4s ease-out',
           }}>
             <div className={`${isMobile ? 'mt-2 gap-2' : 'mt-6 gap-4'} flex flex-wrap items-center justify-center`}>
-              {canDoubleCoins && (
-                <button
-                  onClick={onDoubleCoins}
-                  className={`${isMobile ? 'px-5 py-2.5 text-sm' : 'px-6 py-3 text-sm'} font-black uppercase tracking-widest rounded-sm transition-all`}
-                  style={{
-                    background: 'linear-gradient(135deg, #b45309, #d97706, #fbbf24)',
-                    color: '#451a03',
-                    border: '1.5px solid rgba(251,191,36,0.6)',
-                    boxShadow: '0 0 16px rgba(251,191,36,0.3)',
-                  }}
-                >
-                  🪙 2X Coins
-                </button>
-              )}
               <button
                 onClick={onShare}
                 className={`${isMobile ? 'px-5 py-3 text-sm' : 'px-8 py-4 text-sm'} bg-gradient-to-r from-orange-700 via-red-700 to-red-900 text-white font-black uppercase tracking-widest`}

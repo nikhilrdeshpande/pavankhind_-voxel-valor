@@ -95,7 +95,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
         <div className="flex items-center gap-2">
           {!isMobile && <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-red-300/70 w-14 text-right">{t.ui.vitality}</span>}
           {isMobile && <div style={{ width: '3px', height: '14px', background: '#ef4444', borderRadius: '1px', flexShrink: 0 }} />}
-          <div className={`${isMobile ? 'h-[16px]' : 'h-[18px]'} rounded-sm relative overflow-hidden`} style={{
+          <div className={`${isMobile ? 'h-[16px]' : 'h-[18px]'} rounded-xs relative overflow-hidden`} style={{
             width: isMobile ? '118px' : '230px',
             background: 'linear-gradient(180deg, #1a0808 0%, #0d0404 100%)',
             border: '1px solid rgba(220,60,40,0.4)',
@@ -115,7 +115,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
         <div className="flex items-center gap-2">
           {!isMobile && <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-yellow-300/70 w-14 text-right">{t.ui.spirit}</span>}
           {isMobile && <div style={{ width: '3px', height: '8px', background: '#eab308', borderRadius: '1px', flexShrink: 0 }} />}
-          <div className={`${isMobile ? 'h-[10px]' : 'h-[11px]'} rounded-sm relative overflow-hidden`} style={{
+          <div className={`${isMobile ? 'h-[10px]' : 'h-[11px]'} rounded-xs relative overflow-hidden`} style={{
             width: isMobile ? '118px' : '230px',
             background: 'linear-gradient(180deg, #1a1400 0%, #0d0a00 100%)',
             border: '1px solid rgba(234,179,8,0.3)',
@@ -133,7 +133,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
         <div className="flex items-center gap-2">
           {!isMobile && <span className="text-[9px] font-bold uppercase tracking-[0.15em] w-14 text-right" style={{ color: rage >= 100 ? '#fde047' : 'rgba(249,115,22,0.7)' }}>{t.ui.valor}</span>}
           {isMobile && <div style={{ width: '3px', height: '6px', background: '#f97316', borderRadius: '1px', flexShrink: 0 }} />}
-          <div className={`${isMobile ? 'h-[8px]' : 'h-[9px]'} rounded-sm relative overflow-hidden`} style={{
+          <div className={`${isMobile ? 'h-[8px]' : 'h-[9px]'} rounded-xs relative overflow-hidden`} style={{
             width: isMobile ? '118px' : '230px',
             background: 'linear-gradient(180deg, #1a0c00 0%, #0d0600 100%)',
             border: `1px solid ${rage >= 100 ? 'rgba(250,204,21,0.6)' : 'rgba(249,115,22,0.3)'}`,
@@ -195,7 +195,7 @@ const HUD: React.FC<HUDProps> = ({ stats, t, isMobile, onPause }) => {
             }}>
               ⚑ {t.ui.holdTheLine}
             </div>
-            <div className="mt-2 w-44 h-2.5 rounded-sm overflow-hidden" style={{
+            <div className="mt-2 w-44 h-2.5 rounded-xs overflow-hidden" style={{
               background: 'rgba(0,0,0,0.5)',
               border: '1px solid rgba(245,158,11,0.4)',
               boxShadow: '0 0 8px rgba(245,158,11,0.2)',
