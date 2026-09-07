@@ -29,7 +29,7 @@ export type GameStatus = 'START' | 'STORY' | 'MODE_SELECT' | 'PLAYING' | 'VISHAL
 const defaultStats: GameStats = {
   health: 100, stamina: 100, timeRemaining: 300, score: 0, combo: 0, rage: 0,
   maxCombo: 0, damageTaken: 0, valorStrikes: 0, wave: 1, weaponLevel: 1,
-  perkReady: false, perkTimer: 60, archerWarning: 0,
+  perkReady: false, perkTimer: 30, archerWarning: 0,
   objectiveProgress: 0, objectiveTarget: 0, objectiveTimer: 0, objectivesCompleted: 0,
   tutorialStep: 0, gameElapsed: 0, waveBanner: null, waveBannerTimer: 0,
   dodgeCooldown: 0, enemyPositions: [], playerPosition: { x: 0, z: 0 }, playerYaw: 0,
@@ -246,7 +246,7 @@ const App: React.FC = () => {
     setStats(prev => ({
       ...prev,
       perkReady: false,
-      perkTimer: 60,
+      perkTimer: 45,
     }));
     setShowPerkChoice(false);
     setPaused(false);

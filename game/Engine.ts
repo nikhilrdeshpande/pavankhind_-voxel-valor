@@ -178,7 +178,9 @@ export class PavankhindEngine {
   private finaleActive = false;
   private lastBossWave = 0;
   private nextWeaponUpgradeScore = 5;
-  private perkTimer = 60;
+  // First perk arrives at 30s so even a 90s Skirmish sees the roguelite layer;
+  // later perks every 45s.
+  private perkTimer = 30;
   private perkReady = false;
   private config: GameConfig;
   private lastComboTier = 0;
@@ -1126,6 +1128,6 @@ export class PavankhindEngine {
   public applyPerk(perkId: string) {
     this.player.applyPerk(perkId);
     this.perkReady = false;
-    this.perkTimer = 60;
+    this.perkTimer = 45;
   }
 }

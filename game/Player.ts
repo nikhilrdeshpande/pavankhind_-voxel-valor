@@ -53,6 +53,12 @@ export class Player {
   private swingHitEnemy = false;
   private swingCount = 0;
   private heavySwing = false;
+  private chargeTimer = 0;
+  private wasAttackHeld = false;
+  private riposteTimer = 0;
+  private lastSwingWasRiposte = false;
+  private static readonly CHARGE_THRESHOLD = 0.35; // hold this long = heavy
+  private static readonly CHARGE_AUTOFIRE = 0.9;   // held forever still fires
   private parryTimer = 0;
   private wasBlockingInput = false;
   private dodgeTimer = 0;
@@ -998,21 +1004,26 @@ export class Player {
     const rArm = this.rightArm;
     const comboMod = 1 + Math.min(this.comboCount * 0.15, 1.0);
 
-    if (isActive && this.input.mouseButtons[0] && this.swingPhase === 'IDLE' && !this.isBlocking && this.attackCooldown <= 0) {
-      this.swingPhase = 'WINDUP';
-      this.swingTimer = 0;
-      this.swingSide *= -1;
-      this.swingHitEnemy = false;
-      this.swingCount++;
-      // Every 3rd swing while in a combo becomes a heavy strike: more damage,
-      // smashes through Shielder guards, bigger lunge.
-      this.heavySwing = this.comboCount >= 2 && this.swingCount % 3 === 0;
-      this.attackLungeTimer = this.heavySwing ? 0.2 : 0.14;
-      this.faceCombatTarget(delta, 1);
-      this.stamina -= this.heavySwing ? 16 : 12;
-      this.audio.playBreath(this.heavySwing ? 1.1 : 0.6);
-      if (this.heavySwing) this.cameraShake = Math.max(this.cameraShake, 0.25);
+    // Hold-to-charge attack: tap = light swing, hold past the threshold =
+    // heavy strike on release (auto-fires if held very long). A successful
+    // parry arms a riposte — the next swing is a guaranteed empowered heavy.
+    this.riposteTimer = Math.max(0, this.riposteTimer - delta);
+    const attackHeld = isActive && this.input.mouseButtons[0] && !this.isBlocking;
+    if (this.swingPhase === 'IDLE' && this.attackCooldown <= 0) {
+      if (attackHeld) {
+        this.chargeTimer += delta;
+        if (this.chargeTimer >= Player.CHARGE_AUTOFIRE) {
+          this.startSwing(true);
+        }
+      } else if (this.wasAttackHeld && this.chargeTimer > 0) {
+        this.startSwing(this.chargeTimer >= Player.CHARGE_THRESHOLD);
+      } else {
+        this.chargeTimer = 0;
+      }
+    } else if (!attackHeld) {
+      this.chargeTimer = 0;
     }
+    this.wasAttackHeld = attackHeld;
 
     if (this.swingPhase !== 'IDLE') {
       this.swingTimer += delta * comboMod;
@@ -1032,6 +1043,10 @@ export class Player {
         rArm.rotation.z = THREE.MathUtils.lerp(rArm.rotation.z, 0, delta * 25 * comboMod);
         if (this.swingTimer > 0.1) { this.swingPhase = 'IDLE'; this.attackCooldown = 0.04; }
       }
+    } else if (this.chargeTimer >= Player.CHARGE_THRESHOLD) {
+        // Charged pose: sword raised high, ready to crash down
+        rArm.rotation.x = THREE.MathUtils.lerp(rArm.rotation.x, Math.PI / 1.9, delta * 14);
+        rArm.rotation.z = THREE.MathUtils.lerp(rArm.rotation.z, this.swingSide * 0.9, delta * 12);
     } else {
         rArm.rotation.x = THREE.MathUtils.lerp(rArm.rotation.x, 0, delta * 20);
         rArm.rotation.z = THREE.MathUtils.lerp(rArm.rotation.z, 0, delta * 20);
@@ -1058,6 +1073,26 @@ export class Player {
         this.leftArm.rotation.y = THREE.MathUtils.lerp(this.leftArm.rotation.y, 0, delta * 15);
         this.leftArm.rotation.x = THREE.MathUtils.lerp(this.leftArm.rotation.x, 0, delta * 15);
     }
+  }
+
+  private startSwing(heavy: boolean) {
+    this.chargeTimer = 0;
+    this.swingPhase = 'WINDUP';
+    this.swingTimer = 0;
+    this.swingSide *= -1;
+    this.swingHitEnemy = false;
+    this.swingCount++;
+    // Riposte: parry window converts the next swing into an empowered heavy
+    this.lastSwingWasRiposte = this.riposteTimer > 0;
+    if (this.lastSwingWasRiposte) {
+      heavy = true;
+      this.riposteTimer = 0;
+    }
+    this.heavySwing = heavy;
+    this.attackLungeTimer = heavy ? 0.2 : 0.14;
+    this.stamina -= heavy ? 16 : 12;
+    this.audio.playBreath(heavy ? 1.1 : 0.6);
+    if (heavy) this.cameraShake = Math.max(this.cameraShake, this.lastSwingWasRiposte ? 0.35 : 0.25);
   }
 
   private faceCombatTarget(delta: number, strength: number) {
@@ -1398,11 +1433,23 @@ export class Player {
       this.stamina = Math.min(100, this.stamina + 20);
       this.hitStopTimer = 0.1; // Freeze frame on parry
       this.rage = Math.min(100, this.rage + 12);
+      // Arm the riposte: next swing within the window is an empowered heavy
+      this.riposteTimer = 1.0;
       // Spawn parry flash ring
       this.spawnParryFlash();
       return;
     }
     if (this.dodgeTimer > 0) {
+      // Perfect dodge: the dodge started within 0.15s of the hit landing —
+      // reward the read with slow-mo, stamina refund, and valor
+      if (this.dodgeTimer > 0.10) {
+        this.slowmoTimer = 0.35;
+        this.slowmoFactor = 0.3;
+        this.stamina = Math.min(100, this.stamina + 25);
+        this.rage = Math.min(100, this.rage + 10 * this.valorGainMultiplier);
+        this.audio.playParrySuccess();
+        this.spawnDodgeBurst();
+      }
       return;
     }
     // Blocks 90% of incoming damage
@@ -1523,7 +1570,10 @@ export class Player {
     this.audio.playSwordClash();
     return true;
   }
-  public getAttackPower() { return 120 * (1 + (this.weaponLevel - 1) * 0.15) * this.attackMultiplier * (this.heavySwing ? 1.8 : 1); }
+  public getAttackPower() {
+    const heavyMult = this.heavySwing ? (this.lastSwingWasRiposte ? 2.3 : 1.8) : 1;
+    return 120 * (1 + (this.weaponLevel - 1) * 0.15) * this.attackMultiplier * heavyMult;
+  }
   public isHeavyStrike() { return this.heavySwing && this.swingPhase === 'STRIKE'; }
   public onEnemyKilled() {
     if (this.killHeal > 0) this.health = Math.min(100, this.health + this.killHeal);

@@ -48,6 +48,7 @@ class Enemy {
   private bossPhase2 = false;
   private bossGroundPoundTimer = 0;
   private staggerTimer = 0;
+  private isExecutable = false; // below 20% HP: staggered, next hit finishes
   private circleTimer = 0;
   private circleDashTimer = 0;
   private bossEyeLeft: THREE.Mesh | null = null;
@@ -740,6 +741,14 @@ class Enemy {
     const healthPct = Math.max(0, this.health / this.maxHealth);
     this.healthBar.scale.x = healthPct;
     (this.healthBar.material as THREE.MeshBasicMaterial).color.setHSL(0.3 * healthPct, 1, 0.5);
+
+    // Finisher tell: golden pulse on a staggered, near-death enemy
+    if (this.isExecutable && !this.isDead && this.hitFlash <= 0.5) {
+      const bodyMat = this.body.material as THREE.MeshStandardMaterial;
+      const pulse = 0.35 + Math.sin(this.animTime * 10) * 0.25;
+      bodyMat.emissive.setHex(0xffaa00);
+      bodyMat.emissiveIntensity = pulse;
+    }
     if (this.shieldBar) {
       const shieldPct = Math.max(0, this.shieldStamina / 100);
       this.shieldBar.scale.x = shieldPct;
@@ -881,8 +890,19 @@ class Enemy {
 
   public takeDamage(amount: number) {
     if (this.hitFlash > 0.15) return;
+    // Finisher: a staggered, near-death enemy dies to the next clean hit
+    if (this.isExecutable) {
+      amount = this.health;
+      this.spawnFinisherFlash();
+    }
     this.health -= amount;
     this.hitFlash = 1.5;
+    // Enter the executable state: long stagger + golden tell on the body
+    if (this.health > 0 && this.type !== 'BOSS' && !this.isExecutable &&
+        this.health <= this.maxHealth * 0.2) {
+      this.isExecutable = true;
+      this.applyStagger(1.0);
+    }
     const away = this.mesh.position.clone().sub(this.player.getPosition());
     away.y = 0;
     if (away.lengthSq() > 0.01) {
@@ -970,6 +990,22 @@ class Enemy {
 
   public getType() { return this.type; }
   public isDead_() { return this.isDead; }
+
+  /** Golden burst marking a finisher kill. */
+  private spawnFinisherFlash() {
+    const ringGeo = new THREE.RingGeometry(0.3, 1.2, 16);
+    const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
+      color: 0xffd700, transparent: true, opacity: 0.95,
+      side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false,
+    }));
+    ring.position.copy(this.mesh.position);
+    ring.position.y = 1.3;
+    ring.lookAt(this.player.getCameraPosition());
+    spawnTransientVfx(this.scene, [ring], 0.25, (t) => {
+      ring.scale.setScalar(1 + (1 - t) * 3.5);
+      (ring.material as THREE.MeshBasicMaterial).opacity = t * 0.95;
+    });
+  }
 
   public applyStagger(duration: number) {
     this.staggerTimer = duration;
